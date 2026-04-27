@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>789</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        :root {
+            --neon-red: #ff0033;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            background: #0a0a0a;
+        }
+
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.92;
+        }
+
+        .header {
+            text-align: center;
+            padding: 120px 20px 80px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .title {
+            font-size: 5.2rem;
+            font-weight: 700;
+            letter-spacing: 12px;
+            position: relative;
+            display: inline-block;
+            color: #fff;
+            text-shadow: 
+                0 0 10px #fff,
+                0 0 20px #fff,
+                0 0 40px var(--neon-red);
+            animation: 
+                revealLine 2.8s ease-out forwards,
+                rainbowPulse 3.8s ease-in-out 3s forwards,
+                settleRed 0.8s 6.8s forwards;
+        }
+
+        /* 1. Start as thin glowing line */
+        @keyframes revealLine {
+            0% {
+                letter-spacing: 60px;
+                opacity: 0.3;
+                text-shadow: 0 0 30px #ff3366;
+                filter: blur(8px);
+            }
+            100% {
+                letter-spacing: 12px;
+                opacity: 1;
+                text-shadow: 
+                    0 0 10px #fff,
+                    0 0 20px #fff,
+                    0 0 40px var(--neon-red);
+                filter: blur(0);
+            }
+        }
+
+        /* 2. Continuous smooth rainbow/chroma pulse */
+        @keyframes rainbowPulse {
+            0%   { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+            12%  { text-shadow: 0 0 20px #ff8800, 0 0 40px #ff8800; }
+            25%  { text-shadow: 0 0 20px #ffff00, 0 0 40px #ffff00; }
+            37%  { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+            50%  { text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff; }
+            62%  { text-shadow: 0 0 20px #0066ff, 0 0 40px #0066ff; }
+            75%  { text-shadow: 0 0 20px #cc00ff, 0 0 40px #cc00ff; }
+            88%  { text-shadow: 0 0 20px #ff0088, 0 0 40px #ff0088; }
+            100% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+        }
+
+        /* 3. Settle into final neon red */
+        @keyframes settleRed {
+            to {
+                text-shadow: 
+                    0 0 10px var(--neon-red),
+                    0 0 25px var(--neon-red),
+                    0 0 50px var(--neon-red),
+                    0 0 80px var(--neon-red);
+            }
+        }
+
+        .header p {
+            font-size: 1.4rem;
+            margin-top: 20px;
+            opacity: 0.85;
+            text-shadow: 0 0 15px var(--neon-red);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .category-btn {
+            position: relative;
+            padding: 35px 80px;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 6px;
+            background: rgba(34, 0, 0, 0.55);
+            color: #fff;
+            border: 4px solid var(--neon-red);
+            border-radius: 16px;
+            box-shadow: 0 0 12px var(--neon-red), 0 0 22px var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 320px;
+            text-align: center;
+        }
+        
+        .category-btn:hover {
+            transform: translateY(-6px) scale(1.04);
+            box-shadow: 0 0 20px var(--neon-red), 0 0 35px var(--neon-red);
+            background: rgba(34, 0, 0, 0.75);
+        }
+        
+        .category-btn::after {
+            content: ' →';
+            margin-left: 15px;
+            font-size: 1.6rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .category-btn:hover::after {
+            transform: translateX(8px);
+        }
+        
+        .category-btn canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 1;
+            pointer-events: none;
+            border-radius: 11px;
+        }
+        
+        .category-btn .content {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 80px 20px 40px;
+            font-size: 1.1rem;
+            opacity: 0.7;
+            text-shadow: 0 0 10px var(--neon-red);
+            position: relative;
+            z-index: 10;
+        }
+        
+        @media (max-width: 900px) {
+            .header h1 { font-size: 3.8rem; }
+            .nav-container { gap: 40px; }
+            .category-btn {
+                min-width: 280px;
+                padding: 28px 50px;
+                font-size: 1.9rem;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .nav-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+
+    <div class="header">
+        <h1 class="title">- 789 -</h1>
+        <p>123 And 456 On a Whole New Level.</p>
+    </div>
+    
+    <div class="nav-container">
+        <a href="tools.html" class="category-btn particle-btn">
+            <span class="content">TOOLS</span>
+        </a>
+        <a href="misc.html" class="category-btn particle-btn">
+            <span class="content">MISC</span>
+        </a>
+        <a href="games.html" class="category-btn particle-btn">
+            <span class="content">GAMES</span>
+        </a>
+    </div>
+    
+    <div class="footer">
+        Built for GitHub Pages • Neon Red Cyberpunk Style<br>
+        <strong>Tip:</strong> Create three new files: <code>tools.html</code>, <code>misc.html</code>, and <code>games.html</code>
+    </div>
+
+    <script>
+        // Button particles
+        function initButtonParticles(btn) {
+            if (!btn) return;
+            const canvas = document.createElement('canvas');
+            canvas.style.position = 'absolute';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '1';
+            canvas.style.pointerEvents = 'none';
+            btn.prepend(canvas);
+
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let frame;
+
+            class Particle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = (Math.random() - 0.5) * 0.7;
+                    this.vy = -(0.9 + Math.random() * 1.1);
+                    this.life = 180 + Math.random() * 100;
+                    this.size = 2.2 + Math.random() * 3.2;
+                    this.hueShift = Math.random() * 12;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy -= 0.04;
+                    this.vx *= 0.98;
+                    this.life -= 1.1;
+                    this.size *= 0.988;
+                }
+                draw() {
+                    const alpha = Math.max(0, this.life / 220);
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+                    ctx.shadowBlur = 18;
+                    ctx.shadowColor = '#ff3366';
+                    ctx.fillStyle = `hsl(348, 100%, ${72 + this.hueShift}%)`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (Math.random() < 0.55) {
+                    particles.push(new Particle(Math.random() * canvas.width, canvas.height * 0.92));
+                }
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.update();
+                    p.draw();
+                    if (p.life <= 0 || p.y < 0 || p.x < 0 || p.x > canvas.width) particles.splice(i, 1);
+                }
+                frame = requestAnimationFrame(animate);
+            }
+
+            function resize() {
+                canvas.width = btn.offsetWidth;
+                canvas.height = btn.offsetHeight;
+            }
+
+            resize();
+            animate();
+            window.addEventListener('resize', () => setTimeout(resize, 150));
+        }
+
+        // Falling blocks (unchanged - works great)
+        const bgCanvas = document.getElementById('background-canvas');
+        const bgCtx = bgCanvas.getContext('2d', { alpha: true });
+
+        let fallingPieces = [];
+        let lastTime = 0;
+
+        const TETROMINOS = [
+            { color: '#00ffff', shape: [[1,1,1,1]] },
+            { color: '#ffff00', shape: [[1,1],[1,1]] },
+            { color: '#aa00ff', shape: [[0,1,0],[1,1,1]] },
+            { color: '#00ff00', shape: [[0,1,1],[1,1,0]] },
+            { color: '#ff0000', shape: [[1,1,0],[0,1,1]] },
+            { color: '#0000ff', shape: [[1,0,0],[1,1,1]] },
+            { color: '#ff8800', shape: [[0,0,1],[1,1,1]] }
+        ];
+
+        class FallingPiece {
+            constructor() {
+                const tet = TETROMINOS[Math.floor(Math.random() * TETROMINOS.length)];
+                this.color = tet.color;
+                this.shape = tet.shape;
+                this.size = 26 + Math.random() * 24;
+                this.x = Math.random() * (window.innerWidth - this.size * 4);
+                this.y = -this.size * 4;
+                this.speed = 1.6 + Math.random() * 3.2;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.055;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.rotation += this.rotationSpeed;
+            }
+
+            draw() {
+                bgCtx.save();
+                bgCtx.translate(this.x + this.size * 2, this.y + this.size * 2);
+                bgCtx.rotate(this.rotation);
+
+                const s = this.size;
+                bgCtx.shadowBlur = 28;
+                bgCtx.shadowColor = this.color;
+
+                for (let r = 0; r < this.shape.length; r++) {
+                    for (let c = 0; c < this.shape[r].length; c++) {
+                        if (this.shape[r][c]) {
+                            const px = (c - this.shape[r].length/2) * s;
+                            const py = (r - this.shape.length/2) * s;
+                            
+                            bgCtx.fillStyle = this.color;
+                            bgCtx.fillRect(px, py, s - 4, s - 4);
+
+                            bgCtx.fillStyle = 'rgba(255,255,255,0.65)';
+                            bgCtx.fillRect(px + 6, py + 6, s - 16, 8);
+                        }
+                    }
+                }
+                bgCtx.restore();
+            }
+        }
+
+        function resizeBackground() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+
+        function animateBackground(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+            if (Math.random() < 0.085) {
+                fallingPieces.push(new FallingPiece());
+            }
+
+            for (let i = fallingPieces.length - 1; i >= 0; i--) {
+                const piece = fallingPieces[i];
+                piece.update();
+                piece.draw();
+
+                if (piece.y > bgCanvas.height + 100) {
+                    fallingPieces.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animateBackground);
+        }
+
+        // Start everything
+        window.addEventListener('load', () => {
+            console.log('%c✅ Fixed title with proper text chroma effect', 'color:#ff0033; font-size:16px;');
+            
+            document.querySelectorAll('.particle-btn').forEach(btn => initButtonParticles(btn));
+
+            resizeBackground();
+            requestAnimationFrame(animateBackground);
+
+            window.addEventListener('resize', () => setTimeout(resizeBackground, 100));
+        });
+    </script>
+</body>
+</html>
