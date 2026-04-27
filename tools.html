@@ -7,15 +7,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
         
-        :root {
-            --neon-red: #ff0033;
-        }
+        :root { --neon-red: #ff0033; }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             min-height: 100vh;
@@ -28,10 +22,8 @@
 
         #background-canvas {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 1;
             pointer-events: none;
             opacity: 0.92;
@@ -39,7 +31,7 @@
 
         .header {
             text-align: center;
-            padding: 100px 20px 60px;
+            padding: 120px 20px 80px;
             position: relative;
             z-index: 10;
         }
@@ -48,35 +40,13 @@
             font-size: 4.8rem;
             font-weight: 700;
             letter-spacing: 10px;
-            position: relative;
-            display: inline-block;
-            color: #fff;
-            text-shadow: 
-                0 0 10px #fff,
-                0 0 20px #fff,
-                0 0 40px var(--neon-red);
-            animation: 
-                revealLine 2.8s ease-out forwards,
-                rainbowPulse 3.8s ease-in-out 3s forwards,
-                settleRed 0.8s 6.8s forwards;
+            text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px var(--neon-red);
+            animation: revealLine 2.8s ease-out forwards, rainbowPulse 3.8s ease-in-out 3s forwards, settleRed 0.8s 6.8s forwards;
         }
 
         @keyframes revealLine {
-            0% {
-                letter-spacing: 50px;
-                opacity: 0.3;
-                text-shadow: 0 0 30px #ff3366;
-                filter: blur(8px);
-            }
-            100% {
-                letter-spacing: 10px;
-                opacity: 1;
-                text-shadow: 
-                    0 0 10px #fff,
-                    0 0 20px #fff,
-                    0 0 40px var(--neon-red);
-                filter: blur(0);
-            }
+            0% { letter-spacing: 50px; opacity: 0.3; text-shadow: 0 0 30px #ff3366; filter: blur(8px); }
+            100% { letter-spacing: 10px; opacity: 1; text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px var(--neon-red); filter: blur(0); }
         }
 
         @keyframes rainbowPulse {
@@ -92,20 +62,7 @@
         }
 
         @keyframes settleRed {
-            to {
-                text-shadow: 
-                    0 0 10px var(--neon-red),
-                    0 0 25px var(--neon-red),
-                    0 0 50px var(--neon-red),
-                    0 0 80px var(--neon-red);
-            }
-        }
-
-        .header p {
-            font-size: 1.5rem;
-            margin-top: 25px;
-            opacity: 0.85;
-            text-shadow: 0 0 15px var(--neon-red);
+            to { text-shadow: 0 0 10px var(--neon-red), 0 0 25px var(--neon-red), 0 0 50px var(--neon-red), 0 0 80px var(--neon-red); }
         }
 
         .grid-container {
@@ -113,7 +70,7 @@
             z-index: 10;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px 100px;
+            padding: 40px 20px 100px;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 28px;
@@ -134,7 +91,6 @@
             text-shadow: 0 0 10px var(--neon-red);
             cursor: pointer;
             transition: all 0.4s ease;
-            overflow: hidden;
             text-decoration: none;
             min-height: 220px;
         }
@@ -174,41 +130,14 @@
             letter-spacing: 2px;
         }
 
-        .footer {
-            text-align: center;
-            padding: 60px 20px 50px;
-            font-size: 1.1rem;
-            opacity: 0.7;
-            text-shadow: 0 0 10px var(--neon-red);
-            position: relative;
-            z-index: 10;
-        }
-
-        @media (max-width: 1200px) {
-            .grid-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
+        @media (max-width: 1200px) { .grid-container { grid-template-columns: repeat(4, 1fr); } }
         @media (max-width: 900px) {
-            .grid-container {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .neon-btn {
-                min-height: 200px;
-                padding: 22px 15px;
-            }
-            .neon-btn .icon {
-                width: 78px;
-                height: 78px;
-            }
+            .grid-container { grid-template-columns: repeat(3, 1fr); }
+            .neon-btn { min-height: 200px; padding: 22px 15px; }
+            .neon-btn .icon { width: 78px; height: 78px; }
         }
-
         @media (max-width: 600px) {
-            .grid-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-            }
+            .grid-container { grid-template-columns: repeat(2, 1fr); gap: 20px; }
         }
     </style>
 </head>
@@ -217,22 +146,48 @@
 
     <div class="header">
         <h1 class="title">TOOLS</h1>
-        <p>Primarily empty, adding more here in the future</p>
     </div>
     
-    <div class="grid-container" id="tool-grid">
-        <!-- 50 buttons generated by JavaScript -->
-    </div>
-    
-    <div class="footer">
-        789 Games | Blake<br>
-    </div>
+    <div class="grid-container" id="tool-grid"></div>
 
     <script>
-        // ==================== FALLING TETROMINO BACKGROUND (unchanged) ====================
+        // ==================== EASY TO EDIT LIST ====================
+        const toolList = [
+            { name: "TOOL 1", link: "#", icon: "https://via.placeholder.com/92x92/220022/FF3366?text=T1" },
+            { name: "TOOL 2", link: "#", icon: "https://via.placeholder.com/92x92/220022/FF3366?text=T2" },
+            { name: "TOOL 3", link: "#", icon: "https://via.placeholder.com/92x92/220022/FF3366?text=T3" },
+            // Add more tools here when ready
+        ];
+
+        function createToolButtons() {
+            const grid = document.getElementById('tool-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 50; i++) {
+                const item = toolList[i-1] || { 
+                    name: `TOOL ${i}`, 
+                    link: "#", 
+                    icon: "https://via.placeholder.com/92x92/220022/FF3366?text=TOOL" 
+                };
+
+                const btn = document.createElement('a');
+                btn.href = item.link;
+                btn.className = "neon-btn";
+                btn.target = "_blank";
+
+                btn.innerHTML = `
+                    <img src="${item.icon}" class="icon" alt="${item.name}">
+                    <div class="label">${item.name}</div>
+                    <div class="coming-soon">COMING SOON</div>
+                `;
+
+                grid.appendChild(btn);
+            }
+        }
+
+        // Background Animation
         const bgCanvas = document.getElementById('background-canvas');
         const bgCtx = bgCanvas.getContext('2d', { alpha: true });
-
         let fallingPieces = [];
         let lastTime = 0;
 
@@ -258,30 +213,21 @@
                 this.rotation = Math.random() * Math.PI * 2;
                 this.rotationSpeed = (Math.random() - 0.5) * 0.055;
             }
-
-            update() {
-                this.y += this.speed;
-                this.rotation += this.rotationSpeed;
-            }
-
+            update() { this.y += this.speed; this.rotation += this.rotationSpeed; }
             draw() {
                 bgCtx.save();
                 bgCtx.translate(this.x + this.size * 2, this.y + this.size * 2);
                 bgCtx.rotate(this.rotation);
-
                 const s = this.size;
                 bgCtx.shadowBlur = 28;
                 bgCtx.shadowColor = this.color;
-
                 for (let r = 0; r < this.shape.length; r++) {
                     for (let c = 0; c < this.shape[r].length; c++) {
                         if (this.shape[r][c]) {
                             const px = (c - this.shape[r].length/2) * s;
                             const py = (r - this.shape.length/2) * s;
-                            
                             bgCtx.fillStyle = this.color;
                             bgCtx.fillRect(px, py, s - 4, s - 4);
-
                             bgCtx.fillStyle = 'rgba(255,255,255,0.65)';
                             bgCtx.fillRect(px + 6, py + 6, s - 16, 8);
                         }
@@ -299,61 +245,21 @@
         function animateBackground(timestamp) {
             if (!lastTime) lastTime = timestamp;
             bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-
-            if (Math.random() < 0.085) {
-                fallingPieces.push(new FallingPiece());
-            }
-
+            if (Math.random() < 0.085) fallingPieces.push(new FallingPiece());
             for (let i = fallingPieces.length - 1; i >= 0; i--) {
                 const piece = fallingPieces[i];
                 piece.update();
                 piece.draw();
-
-                if (piece.y > bgCanvas.height + 100) {
-                    fallingPieces.splice(i, 1);
-                }
+                if (piece.y > bgCanvas.height + 100) fallingPieces.splice(i, 1);
             }
-
             requestAnimationFrame(animateBackground);
         }
 
-        // ==================== GENERATE 50 BUTTONS ====================
-        function createToolButtons() {
-            const grid = document.getElementById('tool-grid');
-            grid.innerHTML = '';
-
-            for (let i = 1; i <= 50; i++) {
-                const btn = document.createElement('a');
-                btn.href = "#";                    // ← CHANGE THIS TO YOUR ACTUAL LINK
-                btn.className = "neon-btn";
-                btn.target = "_blank";             // opens in new tab (remove if you don't want)
-
-                btn.innerHTML = `
-                    <img src="https://via.placeholder.com/92x92/220022/FF3366?text=ICON" 
-                         class="icon" 
-                         alt="Tool ${i}">
-                    <div class="label">TOOL ${i}</div>
-                    <div class="coming-soon">COMING SOON</div>
-                `;
-
-                grid.appendChild(btn);
-            }
-        }
-
-        // ==================== INITIALIZE EVERYTHING ====================
         window.addEventListener('load', () => {
-            console.log('%c✅ 50-tool grid page loaded (particles removed for performance)', 'color:#ff0033; font-size:16px;');
-
-            // Create all 50 buttons
             createToolButtons();
-
-            // Background animation only
             resizeBackground();
             requestAnimationFrame(animateBackground);
-
-            window.addEventListener('resize', () => {
-                setTimeout(resizeBackground, 100);
-            });
+            window.addEventListener('resize', () => setTimeout(resizeBackground, 100));
         });
     </script>
 </body>
