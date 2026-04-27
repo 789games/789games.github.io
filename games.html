@@ -46,9 +46,9 @@
 
     <script>
         const gameList = [
-            { name: "GAME 1", link: "#", icon: "https://via.placeholder.com/92x92/220022/FF3366?text=G1" },
-            { name: "GAME 2", link: "#", icon: "https://via.placeholder.com/92x92/220022/FF3366?text=G2" },
-            { name: "GAME 3", link: "#", icon: "https://via.placeholder.com/92x92/220022/FF3366?text=G3" },
+            { name: "1V1.LOL", link: "1v1-lol/index.html", icon: "https://imgs.crazygames.com/auto-covers/1v1-lol_1x1.png?format=auto&quality=70&metadata=none" },
+            { name: "MARIO 64", link: "https://blakecakegit.github.io/sm64/f.html", icon: "https://i1.sndcdn.com/artworks-000130658008-ed2uwn-t500x500.jpg" },
+            { name: "SONIC CD", link: "https://tws2401.github.io/Sonic-CD-WASM/", icon: "https://lastfm.freetls.fastly.net/i/u/500x500/4fd33ff464192d73e7d0da4b4dd6ebcf.jpg" },
         ];
 
         function createGameButtons() {
@@ -66,7 +66,7 @@
                 btn.innerHTML = `
                     <img src="${item.icon}" class="icon" alt="${item.name}">
                     <div class="label">${item.name}</div>
-                    <div class="coming-soon">COMING SOON</div>
+                    <div class="coming-soon"></div>
                 `;
 
                 grid.appendChild(btn);
