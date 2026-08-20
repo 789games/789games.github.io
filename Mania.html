@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mania Rhythm - 4K</title>
+<style>
+  :root {
+    --bg: #0a0a12;
+    --panel: #12121f;
+    --accent: #ff66aa;
+    --accent2: #66ccff;
+    --perfect: #ffee88;
+    --great: #88ff88;
+    --good: #88aaff;
+    --miss: #ff5555;
+    --playfield-w: min(380px, 90vw);
+    --lane-w: calc(var(--playfield-w) / 4);
+    /* notes fill most of lane; receptors are slightly larger outlines */
+    --note-size: calc(var(--lane-w) * 0.82);
+    --receptor-size: calc(var(--lane-w) * 0.94);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: #eee;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+  #app { max-width: 1100px; margin: 0 auto; padding: 12px; min-height: 100vh; }
+  h1, h2, h3 { font-weight: 600; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  button, .btn {
+    background: linear-gradient(135deg, #2a2a45, #1a1a2e);
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.15s;
+  }
+  button:hover, .btn:hover {
+    background: linear-gradient(135deg, #3a3a5a, #2a2a45);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  button:active { transform: translateY(0); }
+  button.primary {
+    background: linear-gradient(135deg, #ff66aa, #cc4488);
+    border-color: #ff88bb;
+  }
+  button.primary:hover { filter: brightness(1.1); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ===== MENU ===== */
+  #main-menu { text-align: center; padding-top: 40px; }
+  #main-menu h1 {
+    font-size: 3rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  #main-menu .subtitle { color: #888; margin-bottom: 30px; }
+  .menu-btns { display: flex; flex-direction: column; gap: 12px; max-width: 280px; margin: 0 auto; }
+  .menu-btns button { width: 100%; padding: 14px; font-size: 17px; }
+  .stats-bar {
+    display: flex; justify-content: center; gap: 30px; margin: 25px 0;
+    font-size: 18px;
+  }
+  .stats-bar span { color: var(--accent2); font-weight: 600; }
+
+  /* ===== SELECT ===== */
+  #select-screen .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .map-card {
+    background: var(--panel);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .map-card:hover, .map-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(255,102,170,0.3);
+  }
+  .map-card h3 { margin-bottom: 6px; }
+  .map-card .meta { color: #aaa; font-size: 13px; }
+  .bpm-select {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 15px 0;
+  }
+  .bpm-select button { min-width: 60px; }
+  .bpm-select button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* ===== GAME ===== */
+  #game-screen {
+    position: relative;
+    min-height: calc(100vh - 24px);
+    padding: 8px 0 16px;
+  }
+  /* only flex when this screen is active — otherwise .screen { display:none } must win */
+  #game-screen.active {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; flex-wrap: wrap; gap: 10px;
+    flex-shrink: 0;
+  }
+  .game-stats { display: flex; gap: 20px; font-size: 16px; }
+  .game-stats .val { color: var(--accent2); font-weight: 700; }
+  #playfield-wrap {
+    position: relative;
+    width: var(--playfield-w);
+    margin: 0 auto;
+    height: min(75vh, 640px);
+    min-height: 400px;
+    background: rgba(0,0,0,0.55);
+    border: 2px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #playfield {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .lane {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 25%;
+    /* subtle lane separators */
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.08);
+  }
+  .lane:nth-child(1) { left: 0%; }
+  .lane:nth-child(2) { left: 25%; }
+  .lane:nth-child(3) { left: 50%; }
+  .lane:nth-child(4) { left: 75%; box-shadow: none; }
+
+  /* Default receptor: empty outlined CIRCLE, slightly bigger than notes */
+  .receptor {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--receptor-size);
+    height: var(--receptor-size);
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background-color: transparent;
+    background-image: none;
+    box-sizing: border-box;
+    transition: border-color 0.05s, box-shadow 0.05s, opacity 0.05s;
+  }
+  .receptor.active {
+    background-color: rgba(255,255,255,0.15);
+    box-shadow: 0 0 10px rgba(255,255,255,0.35);
+  }
+
+  /* Receptor shapes — same form as notes, outlined & empty, slightly larger */
+  .receptor.shape-rect {
+    border-radius: 6px !important;
+    width: calc(var(--receptor-size) * 1.05) !important;
+    height: calc(var(--receptor-size) * 0.52) !important;
+  }
+  .receptor.shape-diamond {
+    border-radius: 4px !important;
+    transform: translateX(-50%) rotate(45deg);
+    width: calc(var(--receptor-size) * 0.75) !important;
+    height: calc(var(--receptor-size) * 0.75) !important;
+  }
+  .receptor.shape-hex {
+    border-radius: 0 !important;
+    border: none !important;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 3px #fff;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+  .receptor.shape-hex.active {
+    box-shadow: inset 0 0 0 3px #fff, 0 0 10px rgba(255,255,255,0.35);
+  }
+  .receptor.shape-arrow {
+    border-radius: 0 !important;
+    border: none !important;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 3px #fff;
+    clip-path: polygon(50% 0%, 100% 50%, 70% 50%, 70% 100%, 30% 100%, 30% 50%, 0% 50%);
+  }
+  .receptor.shape-arrow.active {
+    box-shadow: inset 0 0 0 3px #fff, 0 0 10px rgba(255,255,255,0.35);
+  }
+  /* when custom image is on, never clip/shape-mask the hitzone image */
+  .receptor.custom-img {
+    clip-path: none !important;
+    border-radius: 0 !important;
+    transform: translateX(-50%) !important;
+  }
+  .receptor.shape-bar {
+    border-radius: 3px !important;
+    width: calc(var(--receptor-size) * 1.12) !important;
+    height: calc(var(--receptor-size) * 0.34) !important;
+  }
+
+  /* Default note: solid WHITE CIRCLE */
+  .note {
+    position: absolute;
+    width: var(--note-size);
+    height: var(--note-size);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: none;
+    pointer-events: none;
+    z-index: 5;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+  }
+  .note.custom-img, .note.skin-default.custom-img {
+    background-color: transparent;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .receptor.custom-img {
+    background-color: transparent !important;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: none !important;
+  }
+  .note.skin-pink { background: #ff66aa; }
+  .note.skin-blue { background: #66aaff; }
+  .note.skin-green { background: #66ff99; }
+  .note.skin-gold { background: #ffcc44; }
+  .note.skin-purple { background: #cc66ff; }
+  .note.skin-cyan { background: #44eecc; }
+  .note.skin-red { background: #ff5566; }
+  /* custom uploaded note/hitzone images — contained inside the hitbox */
+  .note.custom-img {
+    background-color: transparent !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    border-radius: 0 !important;
+  }
+  .receptor.custom-img {
+    background-color: transparent !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .note.shape-rect {
+    border-radius: 6px !important;
+    height: calc(var(--note-size) * 0.5) !important;
+    width: calc(var(--note-size) * 1.05) !important;
+  }
+  .note.shape-diamond {
+    border-radius: 4px !important;
+    transform: translateX(-50%) rotate(45deg);
+    width: calc(var(--note-size) * 0.72) !important;
+    height: calc(var(--note-size) * 0.72) !important;
+  }
+  .note.shape-hex {
+    border-radius: 0 !important;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+  .note.shape-arrow {
+    border-radius: 0 !important;
+    clip-path: polygon(50% 0%, 100% 50%, 70% 50%, 70% 100%, 30% 100%, 30% 50%, 0% 50%);
+  }
+  .note.shape-bar {
+    border-radius: 3px !important;
+    height: calc(var(--note-size) * 0.32) !important;
+    width: calc(var(--note-size) * 1.1) !important;
+  }
+
+  .trail {
+    position: absolute;
+    width: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100%;
+    height: 35%;
+    min-height: 20px;
+    background: linear-gradient(to top, currentColor, transparent);
+    opacity: 0.55;
+    pointer-events: none;
+    color: #fff;
+  }
+  .note.has-trail .trail { display: block; }
+  .note .trail { display: none; }
+  .note.shape-diamond .trail { transform: translateX(-50%) rotate(-45deg); }
+
+  .hit-flash {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--receptor-size);
+    height: var(--receptor-size);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .hit-flash.shape-rect {
+    border-radius: 6px !important;
+    width: calc(var(--receptor-size) * 1.05) !important;
+    height: calc(var(--receptor-size) * 0.52) !important;
+  }
+  .hit-flash.shape-diamond {
+    border-radius: 4px !important;
+    transform: translateX(-50%) rotate(45deg);
+    width: calc(var(--receptor-size) * 0.75) !important;
+    height: calc(var(--receptor-size) * 0.75) !important;
+  }
+  .hit-flash.shape-hex {
+    border-radius: 0 !important;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+  .hit-flash.shape-arrow {
+    border-radius: 0 !important;
+    clip-path: polygon(50% 0%, 100% 50%, 70% 50%, 70% 100%, 30% 100%, 30% 50%, 0% 50%);
+  }
+  .hit-flash.shape-bar {
+    border-radius: 3px !important;
+    width: calc(var(--receptor-size) * 1.12) !important;
+    height: calc(var(--receptor-size) * 0.34) !important;
+  }
+
+  .judgment-wrap {
+    position: absolute;
+    left: 50%;
+    top: 38%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 20;
+    min-width: 4ch;
+  }
+  .judgment {
+    font-size: clamp(22px, 5vw, 34px);
+    font-weight: 800;
+    text-shadow: 0 0 12px currentColor;
+    opacity: 0;
+    transition: opacity 0.1s;
+    white-space: nowrap;
+  }
+  .judgment.show { opacity: 1; }
+  .judgment.perfect { color: var(--perfect); }
+  .judgment.great { color: var(--great); }
+  .judgment.good { color: var(--good); }
+  .judgment.miss { color: var(--miss); }
+  .judgment-combo {
+    margin-top: 4px;
+    font-size: clamp(16px, 3.5vw, 24px);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 8px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.1s;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .judgment-combo.show { opacity: 1; }
+
+  .key-hints {
+    display: flex;
+    width: var(--playfield-w);
+    margin: 8px auto 0;
+    gap: 0;
+  }
+  .key-hint {
+    width: 25%;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    padding: 4px;
+  }
+  .key-hint kbd {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: inherit;
+  }
+
+  /* ===== RESULTS ===== */
+  #results-screen { text-align: center; padding-top: 40px; }
+  #results-screen .grade {
+    font-size: 5rem;
+    font-weight: 900;
+    margin: 10px 0;
+  }
+  #results-screen .grade.S { color: var(--perfect); }
+  #results-screen .grade.A { color: var(--great); }
+  #results-screen .grade.B { color: var(--good); }
+  #results-screen .grade.C, #results-screen .grade.D { color: #aaa; }
+  #results-screen .grade.F { color: var(--miss); }
+  .result-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 360px; margin: 20px auto; text-align: left; }
+  .result-stats div { background: var(--panel); padding: 10px 14px; border-radius: 8px; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .stats-grid .stat-card {
+    background: var(--panel);
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .stats-grid .stat-card .label {
+    color: #888;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .stats-grid .stat-card .value {
+    color: var(--accent2);
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== EDITOR ===== */
+  #editor-screen .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px;
+  }
+  #editor-screen label { font-size: 14px; color: #aaa; }
+  #editor-screen input[type="number"] {
+    width: 70px; background: #1a1a2e; border: 1px solid #444; color: #fff;
+    padding: 6px; border-radius: 6px;
+  }
+  #editor-canvas-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    height: 480px;
+    background: #0d0d18;
+    border: 2px solid #333;
+    border-radius: 8px;
+    overflow: auto;
+  }
+  #editor-canvas {
+    position: relative;
+    width: 100%;
+    min-height: 2000px;
+  }
+  .editor-lane {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 25%;
+    border-right: 1px solid #222;
+  }
+  .editor-lane:nth-child(1) { left: 0; }
+  .editor-lane:nth-child(2) { left: 25%; }
+  .editor-lane:nth-child(3) { left: 50%; }
+  .editor-lane:nth-child(4) { left: 75%; border-right: none; }
+  .beat-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: #333;
+    pointer-events: none;
+  }
+  .beat-line.major { background: #555; height: 2px; }
+  .beat-line.quarter { background: #444; }
+  .editor-note {
+    position: absolute;
+    width: calc(25% - 8px);
+    height: 18px;
+    left: 4px;
+    border-radius: 4px;
+    background: var(--accent);
+    cursor: pointer;
+    z-index: 5;
+  }
+  .editor-note:hover { filter: brightness(1.2); }
+  .snap-indicator {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--accent2);
+    opacity: 0.5;
+    pointer-events: none;
+    display: none;
+  }
+
+  /* ===== SHOP ===== */
+  #shop-screen .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .shop-item {
+    background: var(--panel);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .shop-item.owned { border-color: var(--great); }
+  .shop-item.equipped { border-color: var(--accent); box-shadow: 0 0 10px rgba(255,102,170,0.4); }
+  .shop-item h4 { margin-bottom: 6px; }
+  .shop-item .price { color: var(--accent2); font-weight: 600; margin: 8px 0; }
+  .shop-item .preview {
+    height: 40px;
+    margin: 10px auto;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== CUSTOM MAPS ===== */
+  .custom-list { margin: 15px 0; }
+  .custom-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px;
+  }
+
+  /* ===== BACKGROUND SKINS ===== */
+  body.bg-stars { background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); }
+  body.bg-nebula { background: linear-gradient(135deg, #1a0a2e, #0a1a2e, #0a0a1a); }
+  body.bg-grid {
+    background-color: #0a0a12;
+    background-image:
+      linear-gradient(rgba(255,102,170,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,102,170,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  body.bg-ocean { background: linear-gradient(180deg, #0a1628, #0a0a12); }
+
+  .back-btn { margin-bottom: 12px; }
+  .hidden { display: none !important; }
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- MAIN MENU -->
+  <div id="main-menu" class="screen active">
+    <h1>MANIA 4K</h1>
+    <p class="subtitle">Rhythm Game • Local Maps • Editor</p>
+    <div class="stats-bar">
+      <div>Coins: <span id="coin-display">0</span></div>
+      <div>Best Acc: <span id="best-acc">0%</span></div>
+    </div>
+    <div class="menu-btns">
+      <button class="primary" onclick="showScreen('select-screen')">Play</button>
+      <button onclick="startInfiniteMode()" style="border-color:#66ccff;">INFINITE</button>
+      <button onclick="showScreen('editor-screen')">Map Editor</button>
+      <button onclick="showScreen('shop-screen')">Shop</button>
+      <button onclick="showScreen('custom-screen')">My Maps</button>
+      <button onclick="showScreen('stats-screen')">Stats</button>
+      <button onclick="showScreen('settings-screen')">Settings</button>
+    </div>
+  </div>
+
+  <!-- SELECT MAP -->
+  <div id="select-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Select Pattern</h2>
+    <div class="bpm-select" id="bpm-select">
+      <button data-bpm="120" class="active">120</button>
+      <button data-bpm="140">140</button>
+      <button data-bpm="160">160</button>
+      <button data-bpm="180">180</button>
+      <button data-bpm="200">200</button>
+    </div>
+    <div class="grid" id="map-grid"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="primary" id="start-btn" disabled onclick="startGame()">Start</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game-screen" class="screen">
+    <div class="game-header">
+      <button onclick="quitGame()">Quit</button>
+      <div class="game-stats">
+        <div>Score: <span class="val" id="score">0</span></div>
+        <div>Combo: <span class="val" id="combo">0</span></div>
+        <div>Acc: <span class="val" id="acc">100%</span></div>
+        <div id="hits-stat" class="hidden">Hits: <span class="val" id="hits-count">0</span></div>
+      </div>
+      <div id="map-name-display"></div>
+    </div>
+    <div id="next-pattern-hint" class="hidden" style="text-align:center;color:#88aaff;font-size:14px;margin-bottom:8px;">
+      Next: <strong id="next-pattern-name">—</strong>
+    </div>
+    <div id="playfield-wrap">
+      <div id="playfield">
+        <div class="lane"><div class="receptor" data-lane="0"></div><div class="hit-flash" data-lane="0"></div></div>
+        <div class="lane"><div class="receptor" data-lane="1"></div><div class="hit-flash" data-lane="1"></div></div>
+        <div class="lane"><div class="receptor" data-lane="2"></div><div class="hit-flash" data-lane="2"></div></div>
+        <div class="lane"><div class="receptor" data-lane="3"></div><div class="hit-flash" data-lane="3"></div></div>
+        <div class="judgment-wrap">
+          <div class="judgment" id="judgment"></div>
+          <div class="judgment-combo" id="judgment-combo"></div>
+        </div>
+        <div id="countdown" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:72px;font-weight:800;color:#fff;text-shadow:0 0 24px rgba(255,102,170,0.8);z-index:50;pointer-events:none;"></div>
+      </div>
+    </div>
+    <div class="key-hints">
+      <div class="key-hint"><kbd>D</kbd></div>
+      <div class="key-hint"><kbd>F</kbd></div>
+      <div class="key-hint"><kbd>J</kbd></div>
+      <div class="key-hint"><kbd>K</kbd></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-screen" class="screen">
+    <h2>Results</h2>
+    <div class="grade" id="grade">A</div>
+    <div id="infinite-score-wrap" class="hidden" style="margin:18px 0 8px;">
+      <div style="font-size:13px;color:#aaa;letter-spacing:3px;font-weight:600;">INFINITE SCORE</div>
+      <div id="infinite-score-val" style="font-size:clamp(3rem,12vw,5.5rem);font-weight:900;color:var(--accent2);line-height:1.1;text-shadow:0 0 24px rgba(102,204,255,0.45);font-variant-numeric:tabular-nums;">0</div>
+    </div>
+    <div class="result-stats">
+      <div>Score: <span id="r-score">0</span></div>
+      <div>Accuracy: <span id="r-acc">0%</span></div>
+      <div>Max Combo: <span id="r-combo">0</span></div>
+      <div>Notes: <span id="r-notes">0</span></div>
+      <div>Perfect: <span id="r-perf">0</span></div>
+      <div>Great: <span id="r-great">0</span></div>
+      <div>Good: <span id="r-good">0</span></div>
+      <div>Miss: <span id="r-miss">0</span></div>
+    </div>
+    <p id="r-died-wrap" class="hidden" style="margin:8px 0;color:#ff8899;">Died on: <strong id="r-died-pattern">—</strong></p>
+    <p style="margin:12px 0;color:var(--accent2);">Coins earned: <strong id="r-coins">0</strong></p>
+    <button class="primary" onclick="showScreen('select-screen')">Play Again</button>
+    <button onclick="showScreen('main-menu')">Menu</button>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="editor-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Map Editor</h2>
+    <div class="toolbar">
+      <label>BPM <input type="number" id="ed-bpm" value="120" min="60" max="300"></label>
+      <label>Snap
+        <select id="ed-snap">
+          <option value="1">1/1 (Whole)</option>
+          <option value="2">1/2 (Half)</option>
+          <option value="4" selected>1/4 (Quarter)</option>
+          <option value="8">1/8</option>
+          <option value="16">1/16</option>
+        </select>
+      </label>
+      <label>Bars <input type="number" id="ed-bars" value="16" min="4" max="64"></label>
+      <button onclick="rebuildEditor()">Rebuild Grid</button>
+      <button onclick="clearEditorNotes()">Clear Notes</button>
+      <button class="primary" onclick="saveEditorMap()">Save Map</button>
+      <button onclick="testEditorMap()">Test Play</button>
+    </div>
+    <p style="color:#888;font-size:13px;margin-bottom:8px;">Click on a lane at a beat to place/remove notes. Snap controls precision.</p>
+    <div id="editor-canvas-wrap">
+      <div id="editor-canvas"></div>
+    </div>
+    <div style="margin-top:12px;">
+      <input type="text" id="ed-name" placeholder="Map name" style="background:#1a1a2e;border:1px solid #444;color:#fff;padding:8px;border-radius:6px;width:200px;">
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div id="shop-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Shop <span style="font-size:16px;color:var(--accent2);">(Coins: <span id="shop-coins">0</span>)</span></h2>
+    <h3 style="margin-top:16px;color:#aaa;">Note Colors</h3>
+    <div class="shop-grid" id="shop-skins"></div>
+    <h3 style="margin-top:20px;color:#aaa;">Note Shapes</h3>
+    <div class="shop-grid" id="shop-shapes"></div>
+    <h3 style="margin-top:20px;color:#aaa;">Note Trails</h3>
+    <div class="shop-grid" id="shop-trails"></div>
+    <h3 style="margin-top:20px;color:#aaa;">Backgrounds</h3>
+    <div class="shop-grid" id="shop-bgs"></div>
+    <h3 style="margin-top:20px;color:#aaa;">Custom</h3>
+    <div class="shop-grid" id="shop-custom"></div>
+  </div>
+
+  <!-- CUSTOM SKIN EDITOR -->
+  <div id="custom-skin-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('shop-screen')">← Back</button>
+    <h2>Custom Skin</h2>
+    <p style="color:#888;font-size:13px;margin-bottom:16px;">Upload images. They are auto-scaled to fit notes, hitzones, and the playfield background. Max size is limited so nothing breaks.</p>
+    <div style="display:flex;flex-direction:column;gap:16px;max-width:420px;">
+      <div style="background:var(--panel);padding:14px;border-radius:10px;">
+        <h4 style="margin-bottom:8px;">Note image</h4>
+        <div id="preview-note" style="width:64px;height:64px;margin:8px 0;border:1px solid #444;border-radius:8px;background:#111;background-size:contain;background-repeat:no-repeat;background-position:center;"></div>
+        <button onclick="document.getElementById('upload-note').click()">Upload Note</button>
+        <button onclick="clearCustomPart('note')" style="margin-left:6px;">Clear</button>
+        <input type="file" id="upload-note" accept="image/*" style="display:none">
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;">
+        <h4 style="margin-bottom:8px;">Hitzone image</h4>
+        <div id="preview-hitzone" style="width:72px;height:72px;margin:8px 0;border:1px solid #444;border-radius:8px;background:#111;background-size:contain;background-repeat:no-repeat;background-position:center;"></div>
+        <button onclick="document.getElementById('upload-hitzone').click()">Upload Hitzone</button>
+        <button onclick="clearCustomPart('hitzone')" style="margin-left:6px;">Clear</button>
+        <input type="file" id="upload-hitzone" accept="image/*" style="display:none">
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;">
+        <h4 style="margin-bottom:8px;">Background image</h4>
+        <div id="preview-bg" style="width:100%;height:80px;margin:8px 0;border:1px solid #444;border-radius:8px;background:#111;background-size:cover;background-repeat:no-repeat;background-position:center;"></div>
+        <button onclick="document.getElementById('upload-bg').click()">Upload Background</button>
+        <button onclick="clearCustomPart('bg')" style="margin-left:6px;">Clear</button>
+        <input type="file" id="upload-bg" accept="image/*" style="display:none">
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="custom-skin-enabled">
+        Use custom skin images in-game
+      </label>
+    </div>
+  </div>
+
+  <!-- CUSTOM MAPS -->
+  <div id="custom-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>My Maps</h2>
+    <div style="margin:12px 0;">
+      <button onclick="document.getElementById('map-upload').click()">Upload Map File</button>
+      <input type="file" id="map-upload" accept=".json,.mania">
+    </div>
+    <div class="custom-list" id="custom-list"></div>
+  </div>
+
+  <!-- STATS -->
+  <div id="stats-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Stats</h2>
+    <p style="color:#888;font-size:13px;margin-bottom:14px;">Lifetime totals stored on this device.</p>
+    <div id="stats-grid" class="stats-grid"></div>
+    <button style="margin-top:18px;" onclick="if(confirm('Reset all stats? This cannot be undone.')) resetStats()">Reset Stats</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settings-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Settings</h2>
+
+    <h3 style="margin-top:18px;color:#aaa;">Scroll Speed (visual only)</h3>
+    <p style="color:#888;font-size:13px;">Only changes how fast notes move on screen. Does NOT change BPM, note timing, or gaps between hits.</p>
+    <div style="display:flex;align-items:center;gap:12px;margin:10px 0 20px;">
+      <input type="range" id="scroll-speed-slider" min="0.5" max="2.5" step="0.1" value="1.0" style="flex:1;accent-color:#ff66aa;">
+      <span id="scroll-speed-val" style="min-width:40px;color:var(--accent2);font-weight:600;">1.0x</span>
+    </div>
+
+    <h3 style="margin-top:10px;color:#aaa;">Keybinds</h3>
+    <p style="color:#888;font-size:13px;margin-bottom:10px;">Click a button, then press the key you want.</p>
+    <div id="keybind-list" style="display:flex;flex-direction:column;gap:8px;max-width:320px;"></div>
+    <button style="margin-top:14px;" onclick="resetKeybinds()">Reset to D F J K</button>
+  </div>
+</div>
+
+<script>
+// ===================== DATA & STATE =====================
+const DEFAULT_KEYS = ['KeyD', 'KeyF', 'KeyJ', 'KeyK'];
+const HIT_WINDOWS = { perfect: 50, great: 100, good: 150 }; // ms
+// scrollSpeed is user-controlled multiplier (1.0 = normal). Independent of BPM.
+const SCROLL_SPEED_PX = 0.5; // base px per ms at scrollSpeed=1.0
+
+const DEFAULT_STATS = {
+  mapsPlayed: 0,
+  infiniteRuns: 0,
+  bestInfinite: 0,
+  keyPresses: 0,
+  notesHit: 0,
+  perfects: 0,
+  greats: 0,
+  goods: 0,
+  misses: 0,
+  maxCombo: 0,
+  totalScore: 0,
+  coinsEarned: 0,
+  playTimeMs: 0,
+  sGrades: 0,
+  aGrades: 0,
+  fullCombos: 0,
+  quits: 0
+};
+
+let state = {
+  coins: 0,
+  bestAcc: 0,
+  owned: { skins: ['default'], shapes: ['circle'], trails: ['none'], bgs: ['default'], customSkin: false },
+  equipped: { skin: 'default', shape: 'circle', trail: 'none', bg: 'default', useCustom: false },
+  // custom uploaded images as data URLs (scaled/compressed)
+  customImages: { note: null, receptor: null, bg: null },
+  customMaps: [],
+  keybinds: ['KeyD', 'KeyF', 'KeyJ', 'KeyK'],
+  scrollSpeed: 1.0, // user setting, 0.5 – 2.5
+  stats: { ...DEFAULT_STATS }
+};
+
+let selectedPattern = null;
+let selectedBpm = 120;
+let game = null;
+let editorNotes = [];
+let editorPlaying = false;
+let rebindingLane = null; // which lane is waiting for a new key
+// Anti-tamper: locked infinite score rewritten every 50ms while results are open
+let lockedInfiniteScore = 0;
+let infiniteScoreInterval = null;
+
+// ===================== PATTERNS (3 maps each) =====================
+const PATTERNS = [
+  // Stairs
+  { id: 'stairs_1', type: 'stairs', name: 'Stairs I', desc: 'Clean ascending 1-2-3-4', difficulty: 1 },
+  { id: 'stairs_2', type: 'stairs', name: 'Stairs II', desc: 'Stairs with doubles every bar', difficulty: 2 },
+  { id: 'stairs_3', type: 'stairs', name: 'Stairs III', desc: 'Fast stairs + occasional jumps', difficulty: 3 },
+  // Reverse Stairs
+  { id: 'reverse_stairs_1', type: 'reverse_stairs', name: 'Reverse Stairs I', desc: 'Clean descending 4-3-2-1', difficulty: 1 },
+  { id: 'reverse_stairs_2', type: 'reverse_stairs', name: 'Reverse Stairs II', desc: 'Descending with pauses', difficulty: 2 },
+  { id: 'reverse_stairs_3', type: 'reverse_stairs', name: 'Reverse Stairs III', desc: 'Zigzag reverse stairs', difficulty: 3 },
+  // Jacks
+  { id: 'jacks_1', type: 'jacks', name: 'Jacks I', desc: 'Steady single-key jacks', difficulty: 2 },
+  { id: 'jacks_2', type: 'jacks', name: 'Jacks II', desc: 'Jack lane switches every 2 bars', difficulty: 2 },
+  { id: 'jacks_3', type: 'jacks', name: 'Jacks III', desc: 'Dense jacks with bursts', difficulty: 3 },
+  // Chordjacks
+  { id: 'chordjacks_1', type: 'chordjacks', name: 'Chordjacks I', desc: 'Even two-key chordjacks', difficulty: 3 },
+  { id: 'chordjacks_2', type: 'chordjacks', name: 'Chordjacks II', desc: 'Alternating chord pairs', difficulty: 3 },
+  { id: 'chordjacks_3', type: 'chordjacks', name: 'Chordjacks III', desc: 'Heavy chordjacks + minijacks', difficulty: 4 },
+  // Jumptrills
+  { id: 'jumptrills_1', type: 'jumptrills', name: 'Jumptrills I', desc: 'Classic L/R jump trills', difficulty: 3 },
+  { id: 'jumptrills_3', type: 'jumptrills', name: 'Jumptrills III', desc: 'Jumptrills with anchors', difficulty: 4 },
+  // Streams
+  { id: 'streams_1', type: 'streams', name: 'Streams I', desc: 'Smooth linear streams', difficulty: 2 },
+  { id: 'streams_2', type: 'streams', name: 'Streams II', desc: 'Streams with direction changes', difficulty: 2 },
+  { id: 'streams_3', type: 'streams', name: 'Streams III', desc: 'Technical streams', difficulty: 3 },
+  // Trills
+  { id: 'trills_1', type: 'trills', name: 'Trills I', desc: 'Simple two-finger trills', difficulty: 2 },
+  { id: 'trills_2', type: 'trills', name: 'Trills II', desc: 'Trills switching pairs', difficulty: 2 },
+  { id: 'trills_3', type: 'trills', name: 'Trills III', desc: 'Wide trills + jacks', difficulty: 3 },
+  // Anchors
+  { id: 'anchors_1', type: 'anchors', name: 'Anchors I', desc: 'Middle-finger anchor', difficulty: 3 },
+  { id: 'anchors_2', type: 'anchors', name: 'Anchors II', desc: 'Index anchor patterns', difficulty: 3 },
+  { id: 'anchors_3', type: 'anchors', name: 'Anchors III', desc: 'Shifting anchors', difficulty: 4 },
+  // Rolls
+  { id: 'rolls_1', type: 'rolls', name: 'Rolls I', desc: 'Full 1-2-3-4-3-2-1 rolls', difficulty: 2 },
+  { id: 'rolls_2', type: 'rolls', name: 'Rolls II', desc: 'Half-roll variations', difficulty: 2 },
+  { id: 'rolls_3', type: 'rolls', name: 'Rolls III', desc: 'Split-hand rolls', difficulty: 3 },
+  // Minijacks
+  { id: 'minijacks_1', type: 'minijacks', name: 'Minijacks I', desc: 'Light minijack bursts', difficulty: 3 },
+  { id: 'minijacks_2', type: 'minijacks', name: 'Minijacks II', desc: 'Minijacks in streams', difficulty: 3 },
+  { id: 'minijacks_3', type: 'minijacks', name: 'Minijacks III', desc: 'Dense minijack sections', difficulty: 4 },
+  // Handstreams
+  { id: 'handstreams_1', type: 'handstreams', name: 'Handstreams I', desc: 'Light handstream density', difficulty: 3 },
+  { id: 'handstreams_2', type: 'handstreams', name: 'Handstreams II', desc: 'Mid density handstreams', difficulty: 4 },
+  { id: 'handstreams_3', type: 'handstreams', name: 'Handstreams III', desc: 'Heavy handstreams', difficulty: 4 },
+  // Chords
+  { id: 'chords_1', type: 'chords', name: 'Chords I', desc: 'Simple 2-key chords', difficulty: 2 },
+  { id: 'chords_2', type: 'chords', name: 'Chords II', desc: '3-key chords on beat', difficulty: 2 },
+  { id: 'chords_3', type: 'chords', name: 'Chords III', desc: 'Full hands + offbeats', difficulty: 3 }
+];
+
+// seeded RNG so each map is consistent every play
+function makeRng(seed) {
+  let s = seed | 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) | 0;
+    return (s >>> 0) / 4294967296;
+  };
+}
+
+function generateMap(patternId, bpm, durationBeats = 64) {
+  const notes = [];
+  const beatMs = 60000 / bpm;
+  const meta = PATTERNS.find(p => p.id === patternId);
+  const type = meta ? meta.type : patternId;
+  const variant = meta ? (parseInt(patternId.split('_').pop(), 10) || 1) : 1;
+  const rng = makeRng(
+    [...patternId].reduce((a, c) => a + c.charCodeAt(0), 0) * 31 + Math.floor(bpm)
+  );
+  const rand = () => rng();
+  const randInt = (n) => Math.floor(rand() * n);
+
+  const add = (lane, beat) => {
+    const L = ((Math.round(Number(lane)) % 4) + 4) % 4;
+    if (beat >= 0 && beat < durationBeats) notes.push({ lane: L, time: beat * beatMs });
+  };
+
+  switch (type) {
+    case 'stairs': {
+      // integer step 0,1,2,3,0,1,... — never use float % for lanes
+      if (variant === 1) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          add(Math.round(b * 4) % 4, b);
+        }
+      } else if (variant === 2) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          const step = Math.round(b * 4) % 4;
+          add(step, b);
+          if (Math.round(b * 4) % 16 === 0) add((step + 1) % 4, b);
+        }
+      } else {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          const step = Math.round(b * 4) % 4;
+          add(step, b);
+          if (rand() > 0.75) add((step + 2) % 4, b);
+        }
+      }
+      break;
+    }
+    case 'reverse_stairs': {
+      if (variant === 1) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          add(3 - (Math.round(b * 4) % 4), b);
+        }
+      } else if (variant === 2) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          const step = Math.round(b * 4) % 4;
+          if (Math.floor(b) % 2 === 0) add(3 - step, b);
+          else if (Math.round(b * 2) % 2 === 0) add(randInt(4), b);
+        }
+      } else {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          const step = Math.round(b * 4) % 4;
+          const dir = Math.floor(b / 4) % 2 === 0;
+          add(dir ? 3 - step : step, b);
+        }
+      }
+      break;
+    }
+    case 'jacks': {
+      let lane = variant === 1 ? 1 : variant === 2 ? 0 : 2;
+      for (let b = 0; b < durationBeats; b += 0.25) {
+        if (variant === 1 && Math.floor(b) % 8 === 0) lane = randInt(4);
+        if (variant === 2 && Math.floor(b) % 2 === 0 && b % 1 < 0.01) lane = (lane + 1) % 4;
+        if (variant === 3) {
+          if (Math.floor(b * 2) % 8 === 0) lane = randInt(4);
+          add(lane, b);
+          if (rand() > 0.85) add(lane, b + 0.125);
+        } else {
+          add(lane, b);
+        }
+      }
+      break;
+    }
+    case 'chordjacks': {
+      if (variant === 1) {
+        for (let b = 0; b < durationBeats; b += 0.5) {
+          const l1 = Math.floor(b / 2) % 4;
+          const l2 = (l1 + 1) % 4;
+          add(l1, b); add(l2, b);
+          add(l1, b + 0.25); add(l2, b + 0.25);
+        }
+      } else if (variant === 2) {
+        for (let b = 0; b < durationBeats; b += 0.5) {
+          const pair = Math.floor(b) % 2 === 0 ? [0, 1] : [2, 3];
+          add(pair[0], b); add(pair[1], b);
+          add(pair[0], b + 0.25); add(pair[1], b + 0.25);
+        }
+      } else {
+        for (let b = 0; b < durationBeats; b += 0.5) {
+          const l1 = randInt(4);
+          const l2 = (l1 + 1 + randInt(2)) % 4;
+          add(l1, b); add(l2, b);
+          add(l1, b + 0.25); add(l2, b + 0.25);
+          if (rand() > 0.6) add(l1, b + 0.125);
+        }
+      }
+      break;
+    }
+    case 'jumptrills': {
+      if (variant === 1) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          if (Math.floor(b * 2) % 2 === 0) { add(0, b); add(1, b); }
+          else { add(2, b); add(3, b); }
+        }
+      } else if (variant === 2) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          if (Math.floor(b * 2) % 2 === 0) { add(0, b); add(2, b); }
+          else { add(1, b); add(3, b); }
+        }
+      } else {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          if (Math.floor(b * 2) % 2 === 0) { add(0, b); add(1, b); }
+          else { add(2, b); add(3, b); }
+          if (Math.floor(b) % 4 === 0) add(1, b);
+        }
+      }
+      break;
+    }
+    case 'streams': {
+      let lane = 0;
+      for (let b = 0; b < durationBeats; b += 0.25) {
+        add(lane, b);
+        if (variant === 1) lane = (lane + 1) % 4;
+        else if (variant === 2) lane = (lane + 1 + (Math.floor(b) % 8 === 7 ? 1 : 0)) % 4;
+        else {
+          if (rand() > 0.7) lane = randInt(4);
+          else lane = (lane + 1) % 4;
+        }
+      }
+      break;
+    }
+    case 'trills': {
+      let pair = variant === 1 ? 0 : variant === 2 ? 1 : 0;
+      for (let b = 0; b < durationBeats; b += 0.25) {
+        if (variant === 2 && Math.floor(b) % 4 === 0) pair = (pair + 1) % 3;
+        if (variant === 3 && Math.floor(b) % 8 === 0) pair = randInt(3);
+        const a = pair, c = pair + 1;
+        add((Math.floor(b * 4) % 2 === 0) ? a : c, b);
+        if (variant === 3 && rand() > 0.9) add(a, b + 0.125);
+      }
+      break;
+    }
+    case 'anchors': {
+      let anchor = variant === 1 ? 1 : variant === 2 ? 0 : 1;
+      for (let b = 0; b < durationBeats; b += 0.5) {
+        if (variant === 3 && Math.floor(b) % 8 === 0) anchor = randInt(4);
+        add(anchor, b);
+        const other = (anchor + 1 + randInt(3)) % 4;
+        add(other === anchor ? (anchor + 1) % 4 : other, b + 0.25);
+        if (variant >= 2 && b % 1 < 0.01) add((anchor + 2) % 4, b);
+      }
+      break;
+    }
+    case 'rolls': {
+      if (variant === 1) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          const phase = Math.floor(b * 4) % 8;
+          add(phase < 4 ? phase : 7 - phase, b);
+        }
+      } else if (variant === 2) {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          const phase = Math.floor(b * 4) % 4;
+          add(Math.floor(b / 4) % 2 === 0 ? phase : 3 - phase, b);
+        }
+      } else {
+        for (let b = 0; b < durationBeats; b += 0.25) {
+          const hand = Math.floor(b) % 2 === 0;
+          const phase = Math.floor(b * 4) % 2;
+          add(hand ? phase : 2 + phase, b);
+        }
+      }
+      break;
+    }
+    case 'minijacks': {
+      for (let b = 0; b < durationBeats; b += 0.5) {
+        const l = variant === 1 ? Math.floor(b) % 4 : randInt(4);
+        add(l, b);
+        if (variant === 1) {
+          add(l, b + 0.25);
+        } else if (variant === 2) {
+          add((l + 1) % 4, b + 0.25);
+          if (rand() > 0.5) { add(l, b + 0.125); }
+        } else {
+          add(l, b + 0.125);
+          add(l, b + 0.25);
+          if (rand() > 0.5) add((l + 1) % 4, b + 0.375);
+        }
+      }
+      break;
+    }
+    case 'handstreams': {
+      const densBase = variant === 1 ? 0.45 : variant === 2 ? 0.6 : 0.75;
+      for (let b = 0; b < durationBeats; b += 0.125) {
+        const dens = densBase + Math.sin(b * 0.25) * 0.15;
+        if (rand() < dens) add(randInt(4), b);
+        if (variant >= 2 && rand() < dens * 0.25) add(randInt(4), b);
+        if (variant === 3 && rand() < 0.12) add(randInt(4), b);
+      }
+      break;
+    }
+    case 'chords': {
+      for (let b = 0; b < durationBeats; b += 1) {
+        const count = variant === 1 ? 2 : variant === 2 ? 3 : (2 + randInt(3));
+        const used = new Set();
+        for (let i = 0; i < count; i++) {
+          let l;
+          do { l = randInt(4); } while (used.has(l));
+          used.add(l);
+          add(l, b);
+        }
+        if (variant >= 2) add(randInt(4), b + 0.5);
+        if (variant === 3 && rand() > 0.5) {
+          add(randInt(4), b + 0.25);
+          add(randInt(4), b + 0.75);
+        }
+      }
+      break;
+    }
+    default:
+      for (let b = 0; b < durationBeats; b += 0.5) add(randInt(4), b);
+  }
+
+  notes.sort((a, b) => a.time - b.time || a.lane - b.lane);
+  const clean = [];
+  for (const n of notes) {
+    const last = clean[clean.length - 1];
+    if (!last || last.lane !== n.lane || Math.abs(last.time - n.time) > 10) clean.push(n);
+  }
+  return clean;
+}
+
+// ===================== PERSISTENCE =====================
+function loadState() {
+  try {
+    const raw = localStorage.getItem('mania4k_save');
+    if (raw) {
+      const data = JSON.parse(raw);
+      state.coins = data.coins ?? 0;
+      state.bestAcc = data.bestAcc ?? 0;
+      if (data.owned) {
+        state.owned.skins = data.owned.skins || ['default'];
+        state.owned.shapes = data.owned.shapes || ['circle'];
+        state.owned.trails = data.owned.trails || ['none'];
+        state.owned.bgs = data.owned.bgs || ['default'];
+        state.owned.customSkin = !!data.owned.customSkin;
+      }
+      if (data.equipped) {
+        state.equipped.skin = data.equipped.skin || 'default';
+        state.equipped.shape = (data.equipped.shape && data.equipped.shape !== 'rect')
+          ? data.equipped.shape : 'circle';
+        state.equipped.trail = data.equipped.trail || 'none';
+        state.equipped.bg = data.equipped.bg || 'default';
+        state.equipped.useCustom = !!data.equipped.useCustom;
+      }
+      if (!state.equipped.shape || state.equipped.shape === 'rect') {
+        state.equipped.shape = 'circle';
+      }
+      if (data.customImages) {
+        state.customImages = {
+          note: data.customImages.note || null,
+          receptor: data.customImages.receptor || null,
+          bg: data.customImages.bg || null
+        };
+      }
+      state.customMaps = data.customMaps || [];
+      if (Array.isArray(data.keybinds) && data.keybinds.length === 4) {
+        state.keybinds = data.keybinds;
+      }
+      if (typeof data.scrollSpeed === 'number') {
+        state.scrollSpeed = Math.min(2.5, Math.max(0.5, data.scrollSpeed));
+      }
+      if (data.stats && typeof data.stats === 'object') {
+        state.stats = { ...DEFAULT_STATS, ...data.stats };
+      }
+    }
+  } catch (e) { console.warn('Load failed', e); }
+  saveState();
+  applyEquipped();
+  updateCoinDisplays();
+  updateKeyHints();
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('mania4k_save', JSON.stringify(state));
+  } catch (e) {
+    console.warn('Save failed (storage full?)', e);
+    alert('Could not save — storage may be full. Try smaller images.');
+  }
+}
+
+/** Scale image to maxW x maxH, return compressed data URL (png/jpeg) */
+function scaleImageToDataURL(file, maxW, maxH, callback) {
+  if (!file || !file.type.startsWith('image/')) {
+    alert('Please upload an image file (png, jpg, webp, gif).');
+    return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    alert('Image too large (max 8MB).');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      const scale = Math.min(maxW / w, maxH / h, 1);
+      w = Math.max(1, Math.round(w * scale));
+      h = Math.max(1, Math.round(h * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      // prefer png for transparency on notes/receptors; jpeg for bg
+      const isBg = maxW >= 800;
+      const dataUrl = isBg
+        ? canvas.toDataURL('image/jpeg', 0.82)
+        : canvas.toDataURL('image/png');
+      callback(dataUrl);
+    };
+    img.onerror = () => alert('Failed to load image.');
+    img.src = reader.result;
+  };
+  reader.onerror = () => alert('Failed to read file.');
+  reader.readAsDataURL(file);
+}
+
+function updateCoinDisplays() {
+  document.getElementById('coin-display').textContent = state.coins;
+  document.getElementById('shop-coins').textContent = state.coins;
+  document.getElementById('best-acc').textContent = state.bestAcc.toFixed(1) + '%';
+}
+
+function formatPlayTime(ms) {
+  const s = Math.floor((ms || 0) / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + sec + 's';
+  return sec + 's';
+}
+
+function renderStats() {
+  const s = state.stats || DEFAULT_STATS;
+  const hit = (s.perfects || 0) + (s.greats || 0) + (s.goods || 0);
+  const judged = hit + (s.misses || 0);
+  const lifeAcc = judged === 0 ? 0 : ((s.perfects * 1 + s.greats * 0.65 + s.goods * 0.3) / judged * 100);
+  const rows = [
+    ['Maps Played', s.mapsPlayed],
+    ['Infinite Runs', s.infiniteRuns],
+    ['Best Infinite Run', s.bestInfinite + ' hits'],
+    ['Lifetime Key Presses', s.keyPresses],
+    ['Notes Hit', s.notesHit],
+    ['Lifetime Perfects', s.perfects],
+    ['Lifetime Greats', s.greats],
+    ['Lifetime Goods', s.goods],
+    ['Lifetime Misses', s.misses],
+    ['Max Combo (ever)', s.maxCombo],
+    ['Total Score', s.totalScore],
+    ['Coins Earned (lifetime)', s.coinsEarned],
+    ['Best Accuracy', state.bestAcc.toFixed(1) + '%'],
+    ['Lifetime Accuracy', lifeAcc.toFixed(1) + '%'],
+    ['S Grades', s.sGrades],
+    ['A Grades', s.aGrades],
+    ['Full Combos', s.fullCombos],
+    ['Play Time', formatPlayTime(s.playTimeMs)],
+    ['Quits Mid-Run', s.quits]
+  ];
+  const grid = document.getElementById('stats-grid');
+  if (!grid) return;
+  grid.innerHTML = rows.map(([label, value]) =>
+    `<div class="stat-card"><div class="label">${label}</div><div class="value">${value}</div></div>`
+  ).join('');
+}
+
+function resetStats() {
+  state.stats = { ...DEFAULT_STATS };
+  saveState();
+  renderStats();
+}
+
+function applyEquipped() {
+  document.body.className = '';
+  document.body.style.backgroundImage = '';
+  document.body.style.backgroundSize = '';
+  document.body.style.backgroundPosition = '';
+  document.body.style.backgroundRepeat = '';
+
+  const useCustom = state.owned.customSkin && state.equipped.useCustom;
+
+  // Background
+  if (useCustom && state.customImages.bg) {
+    document.body.style.backgroundImage = `url(${state.customImages.bg})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundColor = '#0a0a12';
+  } else if (state.equipped.bg && state.equipped.bg !== 'default') {
+    document.body.classList.add('bg-' + state.equipped.bg);
+  }
+
+  // Receptors: shape + optional custom image
+  document.querySelectorAll('.receptor, .hit-flash').forEach(el => {
+    el.classList.remove('shape-rect', 'shape-diamond', 'shape-hex', 'shape-arrow', 'shape-bar', 'custom-img');
+    el.style.backgroundImage = '';
+    el.style.backgroundSize = '';
+    el.style.backgroundPosition = '';
+    el.style.backgroundRepeat = '';
+    el.style.border = '';
+    el.style.backgroundColor = '';
+    el.style.boxShadow = '';
+    el.style.clipPath = '';
+
+    if (useCustom && state.customImages.receptor && el.classList.contains('receptor')) {
+      // custom hitzone image — no shape outline, image fills the receptor box
+      el.classList.add('custom-img');
+      el.style.backgroundImage = `url(${state.customImages.receptor})`;
+      el.style.backgroundSize = 'contain';
+      el.style.backgroundPosition = 'center';
+      el.style.backgroundRepeat = 'no-repeat';
+      el.style.backgroundColor = 'transparent';
+      el.style.border = 'none';
+      el.style.boxShadow = 'none';
+      el.style.clipPath = 'none';
+    } else if (state.equipped.shape && state.equipped.shape !== 'circle') {
+      el.classList.add('shape-' + state.equipped.shape);
+    }
+  });
+}
+
+function keyCodeToLabel(code) {
+  if (!code) return '?';
+  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Digit')) return code.slice(5);
+  if (code === 'Space') return 'SPC';
+  return code.replace('Arrow', '').slice(0, 3);
+}
+
+function updateKeyHints() {
+  const hints = document.querySelectorAll('.key-hint kbd');
+  hints.forEach((kbd, i) => {
+    kbd.textContent = keyCodeToLabel(state.keybinds[i]);
+  });
+}
+
+// ===================== SCREENS =====================
+function showScreen(id) {
+  // Stop infinite score refresh when leaving results
+  if (id !== 'results-screen' && infiniteScoreInterval) {
+    clearInterval(infiniteScoreInterval);
+    infiniteScoreInterval = null;
+  }
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'select-screen') renderMapGrid();
+  if (id === 'shop-screen') renderShop();
+  if (id === 'custom-screen') renderCustomList();
+  if (id === 'editor-screen') rebuildEditor();
+  if (id === 'settings-screen') renderSettings();
+  if (id === 'custom-skin-screen') updateCustomSkinPreviews();
+  if (id === 'stats-screen') renderStats();
+  if (id === 'main-menu') updateCoinDisplays();
+  // Restart refresh if results is shown again with a locked score
+  if (id === 'results-screen' && lockedInfiniteScore > 0 && !infiniteScoreInterval) {
+    startInfiniteScoreRefresh();
+  }
+}
+
+function renderSettings() {
+  const slider = document.getElementById('scroll-speed-slider');
+  const valEl = document.getElementById('scroll-speed-val');
+  if (slider) {
+    slider.value = state.scrollSpeed;
+    valEl.textContent = state.scrollSpeed.toFixed(1) + 'x';
+    slider.oninput = () => {
+      state.scrollSpeed = parseFloat(slider.value);
+      valEl.textContent = state.scrollSpeed.toFixed(1) + 'x';
+      saveState();
+    };
+  }
+  const list = document.getElementById('keybind-list');
+  if (!list) return;
+  list.innerHTML = '';
+  ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'].forEach((label, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:var(--panel);padding:10px 14px;border-radius:8px;';
+    const waiting = rebindingLane === i;
+    row.innerHTML = `
+      <span>${label}</span>
+      <button id="kb-${i}" style="${waiting ? 'border-color:var(--accent);background:#3a2a35;' : ''}">
+        ${waiting ? 'Press a key…' : keyCodeToLabel(state.keybinds[i])}
+      </button>`;
+    row.querySelector('button').onclick = () => {
+      rebindingLane = i;
+      renderSettings();
+    };
+    list.appendChild(row);
+  });
+}
+
+function resetKeybinds() {
+  state.keybinds = [...DEFAULT_KEYS];
+  rebindingLane = null;
+  saveState();
+  updateKeyHints();
+  renderSettings();
+}
+
+// ===================== SELECT =====================
+function renderMapGrid() {
+  const grid = document.getElementById('map-grid');
+  grid.innerHTML = '';
+  PATTERNS.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'map-card' + (selectedPattern === p.id ? ' selected' : '');
+    card.innerHTML = `<h3>${p.name}</h3><div class="meta">${p.desc}<br>★ ${'★'.repeat(p.difficulty)}</div>`;
+    card.onclick = () => {
+      selectedPattern = p.id;
+      document.querySelectorAll('.map-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('start-btn').disabled = false;
+    };
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('bpm-select').addEventListener('click', e => {
+  if (e.target.tagName === 'BUTTON') {
+    selectedBpm = parseInt(e.target.dataset.bpm);
+    document.querySelectorAll('#bpm-select button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+  }
+});
+
+// ===================== GAME =====================
+// Patterns allowed in Infinite (NO jacks / minijacks / trills / handstreams / chordjacks — too fast)
+const INFINITE_POOL = PATTERNS.filter(p =>
+  p.type !== 'jacks' &&
+  p.type !== 'minijacks' &&
+  p.type !== 'trills' &&
+  p.type !== 'handstreams' &&
+  p.type !== 'chordjacks'
+);
+
+function pickInfinitePattern(excludeId) {
+  let pool = INFINITE_POOL;
+  if (excludeId) pool = pool.filter(p => p.id !== excludeId);
+  if (pool.length === 0) pool = INFINITE_POOL;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function startInfiniteMode() {
+  selectedBpm = selectedBpm || 120;
+  const first = pickInfinitePattern();
+  const next = pickInfinitePattern(first.id);
+  // shorter segments so patterns change often
+  const notes = generateMap(first.id, selectedBpm, 16);
+
+  game = {
+    notes: notes.map((n, i) => ({ ...n, hit: false, missed: false, id: i, spawned: false })),
+    activeNotes: [],
+    startTime: null,
+    score: 0,
+    combo: 0,
+    maxCombo: 0,
+    perfect: 0, great: 0, good: 0, miss: 0,
+    totalNotes: notes.length,
+    name: 'INFINITE',
+    bpm: selectedBpm,
+    scrollSpeed: SCROLL_SPEED_PX * (state.scrollSpeed || 1.0),
+    keysDown: [false, false, false, false],
+    running: false,
+    raf: null,
+    infinite: true,
+    hits: 0,
+    currentPattern: first,
+    nextPattern: next,
+    nextNoteId: notes.length,
+    segments: 1
+  };
+
+  document.getElementById('map-name-display').textContent = 'INFINITE — ' + first.name;
+  document.getElementById('score').textContent = '0';
+  document.getElementById('combo').textContent = '0';
+  document.getElementById('acc').textContent = '100%';
+  document.getElementById('judgment').className = 'judgment';
+  document.getElementById('judgment').textContent = '';
+  document.getElementById('hits-stat').classList.remove('hidden');
+  document.getElementById('hits-count').textContent = '0';
+  document.getElementById('next-pattern-hint').classList.remove('hidden');
+  document.getElementById('next-pattern-name').textContent = next.name;
+
+  document.querySelectorAll('.note').forEach(n => n.remove());
+  showScreen('game-screen');
+  applyEquipped();
+  beginCountdownAndStart();
+}
+
+function appendInfiniteSegment() {
+  if (!game || !game.infinite) return;
+  const current = game.nextPattern;
+  const next = pickInfinitePattern(current.id);
+  const beatMs = 60000 / game.bpm;
+  // gap of 1 beat between segments
+  const lastTime = game.notes.length
+    ? Math.max(...game.notes.map(n => n.time))
+    : 0;
+  const offset = lastTime + beatMs;
+  const segmentNotes = generateMap(current.id, game.bpm, 16);
+  for (const n of segmentNotes) {
+    game.notes.push({
+      lane: n.lane,
+      time: n.time + offset,
+      hit: false,
+      missed: false,
+      id: game.nextNoteId++,
+      spawned: false
+    });
+  }
+  game.totalNotes = game.notes.length;
+  game.currentPattern = current;
+  game.nextPattern = next;
+  game.segments++;
+  document.getElementById('map-name-display').textContent = 'INFINITE — ' + current.name;
+  document.getElementById('next-pattern-name').textContent = next.name;
+}
+
+function startGame(customNotes = null, customName = null) {
+  const notes = customNotes || generateMap(selectedPattern, selectedBpm);
+  const name = customName || (PATTERNS.find(p => p.id === selectedPattern)?.name || 'Custom') + ' @ ' + selectedBpm + ' BPM';
+
+  game = {
+    notes: notes.map((n, i) => ({ ...n, hit: false, missed: false, id: i, spawned: false })),
+    activeNotes: [],
+    startTime: null,
+    score: 0,
+    combo: 0,
+    maxCombo: 0,
+    perfect: 0, great: 0, good: 0, miss: 0,
+    totalNotes: notes.length,
+    name,
+    bpm: selectedBpm,
+    scrollSpeed: SCROLL_SPEED_PX * (state.scrollSpeed || 1.0),
+    keysDown: [false, false, false, false],
+    running: false,
+    raf: null,
+    infinite: false,
+    hits: 0
+  };
+
+  document.getElementById('map-name-display').textContent = name;
+  document.getElementById('score').textContent = '0';
+  document.getElementById('combo').textContent = '0';
+  document.getElementById('acc').textContent = '100%';
+  document.getElementById('judgment').className = 'judgment';
+  document.getElementById('judgment').textContent = '';
+  document.getElementById('hits-stat').classList.add('hidden');
+  document.getElementById('next-pattern-hint').classList.add('hidden');
+
+  document.querySelectorAll('.note').forEach(n => n.remove());
+
+  showScreen('game-screen');
+  applyEquipped();
+  beginCountdownAndStart();
+}
+
+/** 3-2-1-GO countdown, then start the chart */
+function beginCountdownAndStart() {
+  const el = document.getElementById('countdown');
+  const steps = ['3', '2', '1', 'GO'];
+  let i = 0;
+  if (el) {
+    el.style.display = 'flex';
+    el.textContent = steps[0];
+  }
+  // Notes are timed from startTime; put first notes after countdown ends
+  const COUNTDOWN_MS = 3000;
+  game.startTime = performance.now() + COUNTDOWN_MS;
+  game.running = true;
+  gameLoop(); // run loop during countdown so receptors work, notes won't arrive yet
+
+  const tick = () => {
+    i++;
+    if (i < steps.length) {
+      if (el) el.textContent = steps[i];
+      setTimeout(tick, 750);
+    } else {
+      if (el) {
+        el.textContent = '';
+        el.style.display = 'none';
+      }
+    }
+  };
+  setTimeout(tick, 750);
+}
+
+function gameLoop() {
+  if (!game || !game.running) return;
+  const now = performance.now();
+  const t = now - game.startTime; // ms from start
+
+  // Note HIT TIMES come only from the map/BPM. scrollSpeed is visual only.
+  const pf = document.getElementById('playfield');
+  const pfH = pf ? pf.clientHeight : 500;
+  const sampleRec = document.querySelector('.receptor');
+  let receptorCenterY = pfH * 0.85;
+  if (sampleRec) {
+    const recRect = sampleRec.getBoundingClientRect();
+    const pfRect = pf.getBoundingClientRect();
+    receptorCenterY = (recRect.top + recRect.height / 2) - pfRect.top;
+  }
+  let halfNote = (pf ? pf.clientWidth / 4 * 0.9 : 70) / 2;
+  const sampleNote = document.querySelector('.note');
+  if (sampleNote) halfNote = sampleNote.offsetHeight / 2;
+  const perfectTop = receptorCenterY - halfNote;
+
+  // Spawn so notes appear near the top (visual only — does not change when you must press)
+  const travelMs = perfectTop / Math.max(0.05, game.scrollSpeed);
+  const lookAhead = travelMs + 300;
+  for (const n of game.notes) {
+    if (!n.spawned && n.time - t < lookAhead && n.time - t > -200) {
+      n.spawned = true;
+      spawnNote(n);
+    }
+  }
+
+  document.querySelectorAll('.note').forEach(el => {
+    const noteTime = parseFloat(el.dataset.time);
+    const noteId = parseInt(el.dataset.id, 10);
+    // VISUAL position only — judgment uses real time vs noteTime, not Y
+    const pos = perfectTop - (noteTime - t) * game.scrollSpeed;
+    el.style.top = pos + 'px';
+
+    // miss based on TIME only (independent of scroll speed)
+    if (!el.dataset.hit && t - noteTime > HIT_WINDOWS.good + 40) {
+      el.dataset.hit = '1';
+      const noteObj = game.notes.find(n => n.id === noteId) || game.notes[noteId];
+      if (noteObj && !noteObj.hit && !noteObj.missed) {
+        noteObj.missed = true;
+        game.miss++;
+        game.combo = 0;
+        showJudgment('miss');
+        updateAcc();
+        document.getElementById('combo').textContent = '0';
+        // Infinite: one miss = run over
+        if (game.infinite) {
+          el.remove();
+          endGame();
+          return;
+        }
+      }
+      el.remove();
+    }
+  });
+
+  // Infinite: queue more notes before the queue runs dry
+  if (game.infinite) {
+    const remaining = game.notes.filter(n => !n.hit && !n.missed && n.time > t);
+    if (remaining.length < 12) appendInfiniteSegment();
+  }
+
+  // end check (normal maps only — infinite ends on miss)
+  if (!game.infinite) {
+    const allDone = game.notes.every(n => n.hit || n.missed || (t > n.time + 500));
+    if (allDone && t > 500) {
+      endGame();
+      return;
+    }
+  }
+
+  game.raf = requestAnimationFrame(gameLoop);
+}
+
+function spawnNote(n) {
+  const el = document.createElement('div');
+  el.className = 'note';
+  const useCustom = state.owned.customSkin && state.equipped.useCustom && state.customImages.note;
+
+  if (useCustom) {
+    el.classList.add('custom-img');
+    el.style.backgroundImage = `url(${state.customImages.note})`;
+    el.style.backgroundSize = 'contain';
+    el.style.backgroundPosition = 'center';
+    el.style.backgroundRepeat = 'no-repeat';
+    el.style.backgroundColor = 'transparent';
+  } else {
+    if (state.equipped.skin && state.equipped.skin !== 'default') {
+      el.classList.add('skin-' + state.equipped.skin);
+    }
+  }
+  // shape still applies (clips / sizing) unless custom fills the box
+  const shape = state.equipped.shape || 'circle';
+  if (shape && shape !== 'circle') {
+    el.classList.add('shape-' + shape);
+  }
+  el.style.left = ((n.lane + 0.5) * 25) + '%';
+
+  if (state.equipped.trail && state.equipped.trail !== 'none') {
+    el.classList.add('has-trail');
+    const trail = document.createElement('div');
+    trail.className = 'trail';
+    el.appendChild(trail);
+  }
+  el.dataset.time = n.time;
+  el.dataset.lane = n.lane;
+  el.dataset.id = n.id;
+  document.getElementById('playfield').appendChild(el);
+}
+
+function handleKey(lane, down) {
+  if (!game || !game.running) return;
+  game.keysDown[lane] = down;
+  const receptor = document.querySelector(`.receptor[data-lane="${lane}"]`);
+  if (receptor) receptor.classList.toggle('active', down);
+
+  if (!down) return;
+  state.stats.keyPresses++;
+
+  const now = performance.now() - game.startTime;
+  // find closest unhit note in this lane
+  let best = null;
+  let bestDist = Infinity;
+  for (const n of game.notes) {
+    if (n.lane !== lane || n.hit || n.missed) continue;
+    const dist = Math.abs(n.time - now);
+    if (dist < bestDist && dist <= HIT_WINDOWS.good + 30) {
+      bestDist = dist;
+      best = n;
+    }
+  }
+  if (best) {
+    best.hit = true;
+    // remove visual by id
+    document.querySelectorAll(`.note[data-id="${best.id}"]`).forEach(el => {
+      el.dataset.hit = '1';
+      el.remove();
+    });
+    let jud = 'miss';
+    if (bestDist <= HIT_WINDOWS.perfect) { jud = 'perfect'; game.perfect++; game.score += 300; }
+    else if (bestDist <= HIT_WINDOWS.great) { jud = 'great'; game.great++; game.score += 200; }
+    else if (bestDist <= HIT_WINDOWS.good) { jud = 'good'; game.good++; game.score += 100; }
+    else { game.miss++; game.combo = 0; }
+
+    if (jud !== 'miss') {
+      game.combo++;
+      game.maxCombo = Math.max(game.maxCombo, game.combo);
+      game.score += game.combo;
+      if (game.infinite) {
+        game.hits++;
+        document.getElementById('hits-count').textContent = game.hits;
+      }
+    } else if (game.infinite) {
+      showJudgment(jud);
+      flashReceptor(lane, jud);
+      endGame();
+      return;
+    }
+    showJudgment(jud);
+    flashReceptor(lane, jud);
+    updateAcc();
+    document.getElementById('score').textContent = game.score;
+    document.getElementById('combo').textContent = game.combo;
+  }
+}
+
+function flashReceptor(lane, jud) {
+  const flash = document.querySelector(`.hit-flash[data-lane="${lane}"]`);
+  if (!flash) return;
+  const colors = { perfect: '#ffee88', great: '#88ff88', good: '#88aaff', miss: '#ff5555' };
+  flash.style.background = colors[jud] || '#fff';
+  flash.style.opacity = '0.7';
+  setTimeout(() => { flash.style.opacity = '0'; }, 80);
+}
+
+function showJudgment(type) {
+  const el = document.getElementById('judgment');
+  const comboEl = document.getElementById('judgment-combo');
+  el.textContent = type.toUpperCase();
+  el.className = 'judgment show ' + type;
+  if (comboEl) {
+    if (type === 'miss' || !game || game.combo <= 0) {
+      comboEl.textContent = '';
+      comboEl.classList.remove('show');
+    } else {
+      comboEl.textContent = game.combo;
+      comboEl.classList.add('show');
+    }
+  }
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.classList.remove('show');
+    if (comboEl) comboEl.classList.remove('show');
+  }, 500);
+}
+
+function updateAcc() {
+  const hit = game.perfect + game.great + game.good;
+  const total = hit + game.miss;
+  const acc = total === 0 ? 100 : ((game.perfect * 1 + game.great * 0.65 + game.good * 0.3) / total * 100);
+  document.getElementById('acc').textContent = acc.toFixed(1) + '%';
+}
+
+function startInfiniteScoreRefresh() {
+  if (infiniteScoreInterval) clearInterval(infiniteScoreInterval);
+  const write = () => {
+    const el = document.getElementById('infinite-score-val');
+    if (el) el.textContent = String(lockedInfiniteScore);
+  };
+  write();
+  infiniteScoreInterval = setInterval(write, 50); // every 0.05s
+}
+
+function endGame() {
+  game.running = false;
+  if (game.raf) cancelAnimationFrame(game.raf);
+
+  const hit = game.perfect + game.great + game.good;
+  const total = hit + game.miss || 1;
+  const acc = (game.perfect * 1 + game.great * 0.65 + game.good * 0.3) / total * 100;
+
+  let grade = 'F';
+  if (game.infinite) {
+    // grade by hits survived
+    const h = game.hits || 0;
+    if (h >= 200) grade = 'S';
+    else if (h >= 120) grade = 'A';
+    else if (h >= 60) grade = 'B';
+    else if (h >= 30) grade = 'C';
+    else if (h >= 10) grade = 'D';
+  } else {
+    if (acc >= 95 && game.miss === 0) grade = 'S';
+    else if (acc >= 90) grade = 'A';
+    else if (acc >= 80) grade = 'B';
+    else if (acc >= 70) grade = 'C';
+    else if (acc >= 50) grade = 'D';
+  }
+
+  // coins: normal = acc * notes; infinite = hits based
+  const coinsEarned = game.infinite
+    ? Math.floor((game.hits || 0) * 1.5 + game.perfect * 0.3)
+    : Math.floor(acc / 100 * game.totalNotes * 0.8 + game.perfect * 0.5);
+  state.coins += coinsEarned;
+  if (!game.infinite && acc > state.bestAcc) state.bestAcc = acc;
+
+  // Lifetime stats
+  const st = state.stats;
+  if (game.infinite) {
+    st.infiniteRuns++;
+    if ((game.hits || 0) > st.bestInfinite) st.bestInfinite = game.hits || 0;
+  } else {
+    st.mapsPlayed++;
+    if (game.miss === 0 && (game.perfect + game.great + game.good) > 0) st.fullCombos++;
+  }
+  st.notesHit += hit;
+  st.perfects += game.perfect;
+  st.greats += game.great;
+  st.goods += game.good;
+  st.misses += game.miss;
+  if (game.maxCombo > st.maxCombo) st.maxCombo = game.maxCombo;
+  st.totalScore += game.infinite ? (game.hits || 0) : (game.score || 0);
+  st.coinsEarned += coinsEarned;
+  if (grade === 'S') st.sGrades++;
+  else if (grade === 'A') st.aGrades++;
+  if (game.startTime) {
+    const elapsed = Math.max(0, performance.now() - game.startTime);
+    st.playTimeMs += elapsed;
+  }
+  saveState();
+
+  document.getElementById('grade').textContent = grade;
+  document.getElementById('grade').className = 'grade ' + grade;
+  document.getElementById('r-score').textContent = game.infinite ? (game.hits + ' hits') : game.score;
+  document.getElementById('r-acc').textContent = acc.toFixed(1) + '%';
+  document.getElementById('r-combo').textContent = game.maxCombo;
+  document.getElementById('r-notes').textContent = game.infinite ? (game.hits || 0) : game.totalNotes;
+  document.getElementById('r-perf').textContent = game.perfect;
+  document.getElementById('r-great').textContent = game.great;
+  document.getElementById('r-good').textContent = game.good;
+  document.getElementById('r-miss').textContent = game.miss;
+  document.getElementById('r-coins').textContent = '+' + coinsEarned;
+
+  const diedWrap = document.getElementById('r-died-wrap');
+  const diedPat = document.getElementById('r-died-pattern');
+  const infWrap = document.getElementById('infinite-score-wrap');
+  if (game.infinite) {
+    lockedInfiniteScore = game.hits || 0;
+    if (infWrap) infWrap.classList.remove('hidden');
+    startInfiniteScoreRefresh();
+    if (game.currentPattern) {
+      diedWrap.classList.remove('hidden');
+      diedPat.textContent = game.currentPattern.name || game.currentPattern.id || 'Unknown';
+    } else {
+      diedWrap.classList.add('hidden');
+      diedPat.textContent = '—';
+    }
+  } else {
+    lockedInfiniteScore = 0;
+    if (infiniteScoreInterval) {
+      clearInterval(infiniteScoreInterval);
+      infiniteScoreInterval = null;
+    }
+    if (infWrap) infWrap.classList.add('hidden');
+    diedWrap.classList.add('hidden');
+    diedPat.textContent = '—';
+  }
+
+  showScreen('results-screen');
+}
+
+function quitGame() {
+  if (game) {
+    if (game.running) {
+      state.stats.quits++;
+      if (game.startTime) {
+        state.stats.playTimeMs += Math.max(0, performance.now() - game.startTime);
+      }
+      saveState();
+    }
+    game.running = false;
+    if (game.raf) cancelAnimationFrame(game.raf);
+  }
+  showScreen('main-menu');
+}
+
+// keyboard + rebind support
+window.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  // rebinding mode
+  if (rebindingLane !== null) {
+    e.preventDefault();
+    state.keybinds[rebindingLane] = e.code;
+    rebindingLane = null;
+    saveState();
+    updateKeyHints();
+    renderSettings();
+    return;
+  }
+  const idx = state.keybinds.indexOf(e.code);
+  if (idx >= 0) {
+    e.preventDefault();
+    handleKey(idx, true);
+  }
+});
+window.addEventListener('keyup', e => {
+  const idx = state.keybinds.indexOf(e.code);
+  if (idx >= 0) {
+    e.preventDefault();
+    handleKey(idx, false);
+  }
+});
+
+// ===================== EDITOR =====================
+function rebuildEditor() {
+  const bpm = parseFloat(document.getElementById('ed-bpm').value) || 120;
+  const bars = parseInt(document.getElementById('ed-bars').value) || 16;
+  const snap = parseInt(document.getElementById('ed-snap').value) || 4;
+  const canvas = document.getElementById('editor-canvas');
+  canvas.innerHTML = '';
+
+  // lanes
+  for (let i = 0; i < 4; i++) {
+    const lane = document.createElement('div');
+    lane.className = 'editor-lane';
+    canvas.appendChild(lane);
+  }
+
+  const pxPerBeat = 60;
+  const totalBeats = bars * 4;
+  canvas.style.height = (totalBeats * pxPerBeat + 40) + 'px';
+
+  // beat lines
+  for (let b = 0; b <= totalBeats; b += 1 / snap) {
+    const line = document.createElement('div');
+    line.className = 'beat-line';
+    if (b % 4 === 0) line.classList.add('major');
+    else if (b % 1 === 0) line.classList.add('quarter');
+    line.style.top = (b * pxPerBeat) + 'px';
+    canvas.appendChild(line);
+  }
+
+  // place existing notes
+  editorNotes.forEach(n => {
+    if (n.beat < totalBeats) placeEditorNoteVisual(n.lane, n.beat, pxPerBeat);
+  });
+
+  // click to place
+  canvas.onclick = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const wrap = document.getElementById('editor-canvas-wrap');
+    const y = e.clientY - rect.top + wrap.scrollTop;
+    const x = e.clientX - rect.left;
+    const lane = Math.min(3, Math.floor(x / (rect.width / 4)));
+    let beat = y / pxPerBeat;
+    // snap
+    const step = 1 / snap;
+    beat = Math.round(beat / step) * step;
+    if (beat < 0 || beat > totalBeats) return;
+
+    // toggle
+    const idx = editorNotes.findIndex(n => n.lane === lane && Math.abs(n.beat - beat) < 0.001);
+    if (idx >= 0) {
+      editorNotes.splice(idx, 1);
+    } else {
+      editorNotes.push({ lane, beat });
+    }
+    // re-render notes only
+    canvas.querySelectorAll('.editor-note').forEach(el => el.remove());
+    editorNotes.forEach(n => {
+      if (n.beat <= totalBeats) placeEditorNoteVisual(n.lane, n.beat, pxPerBeat);
+    });
+  };
+}
+
+function placeEditorNoteVisual(lane, beat, pxPerBeat) {
+  const el = document.createElement('div');
+  el.className = 'editor-note';
+  el.style.top = (beat * pxPerBeat) + 'px';
+  el.style.left = (lane * 25 + 1) + '%';
+  el.style.width = '23%';
+  document.getElementById('editor-canvas').appendChild(el);
+}
+
+function clearEditorNotes() {
+  editorNotes = [];
+  rebuildEditor();
+}
+
+function saveEditorMap() {
+  const name = document.getElementById('ed-name').value.trim() || 'Custom Map ' + (state.customMaps.length + 1);
+  const bpm = parseFloat(document.getElementById('ed-bpm').value) || 120;
+  const beatMs = 60000 / bpm;
+  const notes = editorNotes.map(n => ({ lane: n.lane, time: n.beat * beatMs })).sort((a,b) => a.time - b.time);
+
+  const mapObj = {
+    id: 'custom_' + Date.now(),
+    name,
+    bpm,
+    notes,
+    created: Date.now()
+  };
+  state.customMaps.push(mapObj);
+  saveState();
+
+  // also offer download
+  const blob = new Blob([JSON.stringify(mapObj, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name.replace(/\s+/g, '_') + '.mania.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  alert('Map saved locally and downloaded as file!');
+}
+
+function testEditorMap() {
+  if (editorNotes.length === 0) { alert('No notes placed!'); return; }
+  const bpm = parseFloat(document.getElementById('ed-bpm').value) || 120;
+  selectedBpm = bpm;
+  const beatMs = 60000 / bpm;
+  const notes = editorNotes.map(n => ({ lane: n.lane, time: n.beat * beatMs }));
+  startGame(notes, (document.getElementById('ed-name').value || 'Editor Test') + ' @ ' + bpm);
+}
+
+// ===================== CUSTOM MAPS =====================
+function renderCustomList() {
+  const list = document.getElementById('custom-list');
+  list.innerHTML = '';
+  if (state.customMaps.length === 0) {
+    list.innerHTML = '<p style="color:#666;">No custom maps yet. Create one in the editor or upload a file.</p>';
+    return;
+  }
+  state.customMaps.forEach((m, i) => {
+    const div = document.createElement('div');
+    div.className = 'custom-item';
+    div.innerHTML = `
+      <div><strong>${m.name}</strong><br><span style="color:#888;font-size:13px;">${m.bpm} BPM • ${m.notes.length} notes</span></div>
+      <div>
+        <button onclick="playCustom(${i})">Play</button>
+        <button onclick="downloadCustom(${i})">Save File</button>
+        <button onclick="deleteCustom(${i})" style="color:#f66;">Delete</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function playCustom(i) {
+  const m = state.customMaps[i];
+  selectedBpm = m.bpm;
+  startGame(m.notes, m.name);
+}
+
+function downloadCustom(i) {
+  const m = state.customMaps[i];
+  const blob = new Blob([JSON.stringify(m, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = m.name.replace(/\s+/g, '_') + '.mania.json';
+  a.click();
+}
+
+function deleteCustom(i) {
+  if (confirm('Delete this map?')) {
+    state.customMaps.splice(i, 1);
+    saveState();
+    renderCustomList();
+  }
+}
+
+document.getElementById('map-upload').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data.notes || !Array.isArray(data.notes)) throw new Error('Invalid map');
+      data.id = data.id || 'uploaded_' + Date.now();
+      data.name = data.name || file.name.replace(/\.(json|mania)$/i, '');
+      data.bpm = data.bpm || 120;
+      state.customMaps.push(data);
+      saveState();
+      renderCustomList();
+      alert('Map uploaded successfully!');
+    } catch (err) {
+      alert('Failed to load map: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ===================== SHOP =====================
+const SHOP = {
+  skins: [
+    { id: 'default', name: 'Pure White', price: 0, preview: '#ffffff' },
+    { id: 'pink', name: 'Hot Pink', price: 120, preview: '#ff66aa' },
+    { id: 'blue', name: 'Ocean Blue', price: 150, preview: '#66aaff' },
+    { id: 'green', name: 'Mint Green', price: 150, preview: '#66ff99' },
+    { id: 'gold', name: 'Golden', price: 300, preview: '#ffcc44' },
+    { id: 'purple', name: 'Violet', price: 250, preview: '#cc66ff' },
+    { id: 'cyan', name: 'Aqua Cyan', price: 180, preview: '#44eecc' },
+    { id: 'red', name: 'Crimson', price: 200, preview: '#ff5566' }
+  ],
+  shapes: [
+    { id: 'circle', name: 'Circle', price: 0, preview: 'circle' },
+    { id: 'rect', name: 'Rectangle', price: 100, preview: 'rect' },
+    { id: 'diamond', name: 'Diamond', price: 180, preview: 'diamond' },
+    { id: 'hex', name: 'Hexagon', price: 220, preview: 'hex' },
+    { id: 'arrow', name: 'Arrow', price: 250, preview: 'arrow' },
+    { id: 'bar', name: 'Flat Bar', price: 100, preview: 'bar' }
+  ],
+  trails: [
+    { id: 'none', name: 'No Trail', price: 0 },
+    { id: 'basic', name: 'Basic Trail', price: 100 },
+    { id: 'long', name: 'Long Trail', price: 200 }
+  ],
+  bgs: [
+    { id: 'default', name: 'Dark', price: 0 },
+    { id: 'stars', name: 'Starfield', price: 200 },
+    { id: 'nebula', name: 'Nebula', price: 250 },
+    { id: 'grid', name: 'Neon Grid', price: 180 },
+    { id: 'ocean', name: 'Deep Ocean', price: 150 }
+  ]
+};
+
+function renderShop() {
+  updateCoinDisplays();
+  const renderSection = (containerId, items, type) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    const ownedKey = type === 'skins' ? 'skins' : type === 'shapes' ? 'shapes' : type === 'trails' ? 'trails' : 'bgs';
+    const equipKey = type === 'skins' ? 'skin' : type === 'shapes' ? 'shape' : type === 'trails' ? 'trail' : 'bg';
+
+    items.forEach(item => {
+      const owned = (state.owned[ownedKey] || []).includes(item.id);
+      const equipped = state.equipped[equipKey] === item.id;
+      const div = document.createElement('div');
+      div.className = 'shop-item' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+      let previewHtml = '';
+      if (type === 'skins') {
+        previewHtml = `<div class="preview" style="background:${item.preview};width:28px;height:28px;border-radius:50%;margin:0 auto;"></div>`;
+      } else if (type === 'shapes') {
+        let shapeStyle = 'width:28px;height:28px;background:#fff;margin:0 auto;border-radius:50%;';
+        if (item.id === 'rect') shapeStyle = 'width:36px;height:16px;background:#fff;margin:6px auto;border-radius:3px;';
+        else if (item.id === 'diamond') shapeStyle = 'width:22px;height:22px;background:#fff;margin:4px auto;transform:rotate(45deg);border-radius:2px;';
+        else if (item.id === 'hex') shapeStyle = 'width:30px;height:26px;background:#fff;margin:2px auto;clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);';
+        else if (item.id === 'arrow') shapeStyle = 'width:26px;height:26px;background:#fff;margin:2px auto;clip-path:polygon(50% 0%,100% 50%,70% 50%,70% 100%,30% 100%,30% 50%,0% 50%);';
+        else if (item.id === 'bar') shapeStyle = 'width:42px;height:12px;background:#fff;margin:8px auto;border-radius:2px;';
+        previewHtml = `<div class="preview" style="${shapeStyle}"></div>`;
+      }
+      div.innerHTML = `
+        <h4>${item.name}</h4>
+        ${previewHtml}
+        <div class="price">${item.price === 0 ? 'Free' : item.price + ' coins'}</div>
+        <button ${owned && equipped ? 'disabled' : ''}>
+          ${equipped ? 'Equipped' : owned ? 'Equip' : 'Buy'}
+        </button>`;
+      div.querySelector('button').onclick = () => {
+        if (owned) {
+          state.equipped[equipKey] = item.id;
+          applyEquipped();
+          saveState();
+          renderShop();
+        } else {
+          if (state.coins >= item.price) {
+            state.coins -= item.price;
+            if (!state.owned[ownedKey]) state.owned[ownedKey] = [];
+            state.owned[ownedKey].push(item.id);
+            saveState();
+            updateCoinDisplays();
+            renderShop();
+          } else {
+            alert('Not enough coins!');
+          }
+        }
+      };
+      el.appendChild(div);
+    });
+  };
+  renderSection('shop-skins', SHOP.skins, 'skins');
+  renderSection('shop-shapes', SHOP.shapes, 'shapes');
+  renderSection('shop-trails', SHOP.trails, 'trails');
+  renderSection('shop-bgs', SHOP.bgs, 'bgs');
+
+  // Custom skin unlock (5000 coins) — equippable / unequippable
+  const customEl = document.getElementById('shop-custom');
+  if (customEl) {
+    customEl.innerHTML = '';
+    const owned = !!state.owned.customSkin;
+    const equipped = !!state.equipped.useCustom;
+    const div = document.createElement('div');
+    div.className = 'shop-item' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+    div.innerHTML = `
+      <h4>Custom Skin Pack</h4>
+      <div class="preview" style="font-size:28px;line-height:40px;">🖼️</div>
+      <div class="price">${owned ? (equipped ? 'Equipped' : 'Unlocked') : '5000 coins'}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+        ${owned ? `
+          <button class="equip-btn">${equipped ? 'Unequip' : 'Equip'}</button>
+          <button class="edit-btn">Edit Images</button>
+        ` : `<button class="buy-btn">Buy</button>`}
+      </div>`;
+    if (owned) {
+      div.querySelector('.equip-btn').onclick = () => {
+        state.equipped.useCustom = !state.equipped.useCustom;
+        saveState();
+        applyEquipped();
+        renderShop();
+      };
+      div.querySelector('.edit-btn').onclick = () => showScreen('custom-skin-screen');
+    } else {
+      div.querySelector('.buy-btn').onclick = () => {
+        if (state.coins >= 5000) {
+          state.coins -= 5000;
+          state.owned.customSkin = true;
+          state.equipped.useCustom = true;
+          saveState();
+          updateCoinDisplays();
+          renderShop();
+          showScreen('custom-skin-screen');
+        } else {
+          alert('Not enough coins! Need 5000.');
+        }
+      };
+    }
+    customEl.appendChild(div);
+  }
+}
+
+function clearCustomPart(part) {
+  if (part === 'note') state.customImages.note = null;
+  else if (part === 'hitzone') state.customImages.receptor = null;
+  else if (part === 'bg') state.customImages.bg = null;
+  saveState();
+  updateCustomSkinPreviews();
+  applyEquipped();
+}
+
+function updateCustomSkinPreviews() {
+  const pn = document.getElementById('preview-note');
+  const ph = document.getElementById('preview-hitzone');
+  const pb = document.getElementById('preview-bg');
+  if (pn) pn.style.backgroundImage = state.customImages.note ? `url(${state.customImages.note})` : '';
+  if (ph) ph.style.backgroundImage = state.customImages.receptor ? `url(${state.customImages.receptor})` : '';
+  if (pb) pb.style.backgroundImage = state.customImages.bg ? `url(${state.customImages.bg})` : '';
+  const cb = document.getElementById('custom-skin-enabled');
+  if (cb) {
+    cb.checked = !!state.equipped.useCustom;
+    cb.onchange = () => {
+      state.equipped.useCustom = cb.checked;
+      saveState();
+      applyEquipped();
+    };
+  }
+}
+
+function bindCustomUploads() {
+  const bind = (inputId, part, maxW, maxH) => {
+    const input = document.getElementById(inputId);
+    if (!input || input._bound) return;
+    input._bound = true;
+    input.addEventListener('change', e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      scaleImageToDataURL(file, maxW, maxH, dataUrl => {
+        if (part === 'note') state.customImages.note = dataUrl;
+        else if (part === 'hitzone') state.customImages.receptor = dataUrl;
+        else if (part === 'bg') state.customImages.bg = dataUrl;
+        // auto-enable when uploading
+        state.equipped.useCustom = true;
+        saveState();
+        updateCustomSkinPreviews();
+        applyEquipped();
+      });
+      input.value = '';
+    });
+  };
+  // notes/hitzones: small (fits lane hitbox). bg: larger but still compressed
+  bind('upload-note', 'note', 128, 128);
+  bind('upload-hitzone', 'hitzone', 160, 160);
+  bind('upload-bg', 'bg', 1280, 720);
+}
+
+// ===================== INIT =====================
+loadState();
+renderMapGrid();
+updateKeyHints();
+bindCustomUploads();
+
+// always persist on leave / hide
+window.addEventListener('beforeunload', saveState);
+window.addEventListener('pagehide', saveState);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveState();
+});
+</script>
+</body>
+</html>
