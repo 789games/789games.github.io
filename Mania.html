@@ -29,7 +29,19 @@
     overflow-x: hidden;
     user-select: none;
   }
-  #app { max-width: 1100px; margin: 0 auto; padding: 12px; min-height: 100vh; }
+  /* Viewport-locked background — never rescales with menu/content height */
+  #site-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--bg);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: scroll; /* size is viewport via fixed inset */
+  }
+  #app { max-width: 1100px; margin: 0 auto; padding: 12px; min-height: 100vh; position: relative; z-index: 0; }
   h1, h2, h3 { font-weight: 600; }
   .screen { display: none; }
   .screen.active { display: block; }
@@ -138,6 +150,7 @@
     position: relative;
     width: 100%;
     height: 100%;
+    z-index: 1;
   }
   .lane {
     position: absolute;
@@ -441,6 +454,362 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Floating rank badge (right side) */
+  #rank-badge {
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.35);
+    background: #333;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  #rank-badge:hover {
+    transform: translateY(-50%) scale(1.08);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.55);
+  }
+  #rank-badge.hidden { display: none !important; }
+
+  #rank-card-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #rank-card-overlay.open { display: flex; }
+  #rank-card {
+    background: linear-gradient(160deg, #1a1a2e, #12121f 60%);
+    border: 2px solid #444;
+    border-radius: 20px;
+    padding: 36px 40px;
+    text-align: center;
+    min-width: min(320px, 90vw);
+    cursor: pointer;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  #rank-card .rank-emoji { font-size: 72px; line-height: 1; margin-bottom: 12px; }
+  #rank-card .rank-name {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  #rank-card .rank-sub { color: #aaa; font-size: 14px; }
+  #rank-card .rank-hint { color: #666; font-size: 12px; margin-top: 18px; }
+
+  .xp-bar-wrap {
+    background: #1a1a2e;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 12px 0 18px;
+    border: 1px solid #333;
+  }
+  .xp-bar-track {
+    height: 12px;
+    background: #222;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 6px;
+    transition: width 0.25s;
+  }
+  .reward-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 360px;
+    overflow-y: auto;
+    margin-top: 10px;
+  }
+  .reward-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .reward-row.locked { opacity: 0.55; }
+  .reward-row.claimed { border-color: var(--great); }
+  .reward-row .lvl { color: var(--accent2); font-weight: 700; min-width: 52px; }
+
+  /* Profile card */
+  .profile-card-preview {
+    position: relative;
+    max-width: 420px;
+    min-height: 120px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #444;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  }
+  .profile-card-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1a1a2e, #2a1a3a);
+    z-index: 0;
+  }
+  .profile-card-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    background: rgba(0,0,0,0.35);
+  }
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #222;
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+  }
+  .profile-name { font-size: 1.35rem; font-weight: 800; }
+  .profile-title {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .profile-rank-line { color: #aaa; font-size: 12px; margin-top: 4px; }
+  .cardbg-chip {
+    width: 56px;
+    height: 36px;
+    border-radius: 6px;
+    border: 2px solid #444;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .cardbg-chip.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .cardbg-chip.locked { opacity: 0.4; cursor: not-allowed; }
+
+  /* Animated profile card backgrounds */
+  @keyframes card-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes card-pulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.25); }
+  }
+  @keyframes card-hue {
+    to { filter: hue-rotate(360deg); }
+  }
+  .pcbg-default { background: linear-gradient(135deg, #1a1a2e, #2a1a3a); }
+  .pcbg-midnight { background: linear-gradient(135deg, #0a1628, #1a0a2e); }
+  .pcbg-ember { background: linear-gradient(135deg, #2e0a0a, #3a1a0a); }
+  .pcbg-forest { background: linear-gradient(135deg, #0a2e14, #0a1a12); }
+  .pcbg-aurora {
+    background: linear-gradient(120deg, #0a2e2e, #1a0a3a, #0a2e1a, #0a2e2e);
+    background-size: 300% 300%;
+    animation: card-shift 8s ease infinite;
+  }
+  .pcbg-neon {
+    background: linear-gradient(90deg, #ff0066, #6600ff, #00ccff, #ff0066);
+    background-size: 300% 100%;
+    animation: card-shift 4s linear infinite;
+  }
+  .pcbg-goldpulse {
+    background: linear-gradient(135deg, #3a2e0a, #5a4a10, #3a2e0a);
+    animation: card-pulse 2.5s ease-in-out infinite;
+  }
+  .pcbg-prism {
+    background: linear-gradient(135deg, #ff004c, #ffee00, #00e676, #00b0ff, #d500f9);
+    background-size: 200% 200%;
+    animation: card-shift 6s linear infinite, card-hue 10s linear infinite;
+  }
+
+  /* Crates */
+  .crate-tabs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 16px;
+  }
+  .crate-tabs button {
+    flex: 1; min-width: 100px;
+  }
+  .crate-tabs button.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #3a2a45, #2a1a35);
+  }
+  .crate-panel { display: none; }
+  .crate-panel.active { display: block; }
+  .crate-buy-card {
+    background: var(--panel);
+    border: 1px solid #333;
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 360px;
+    text-align: center;
+  }
+  .crate-buy-card .crate-art {
+    font-size: 64px;
+    margin: 8px 0 12px;
+    filter: drop-shadow(0 0 12px rgba(255,102,170,0.4));
+  }
+  .owned-crates-list {
+    display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px;
+  }
+  .owned-crate {
+    background: var(--panel);
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .owned-crate .crate-art { font-size: 40px; }
+  .crate-roll-wrap {
+    position: relative;
+    margin: 20px auto;
+    max-width: 640px;
+    height: 140px;
+    background: #0d0d18;
+    border: 2px solid #444;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .crate-roll-track {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    will-change: transform;
+  }
+  .crate-roll-item {
+    flex: 0 0 100px;
+    width: 100px;
+    height: 110px;
+    margin: 0 6px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    text-align: center;
+    padding: 6px;
+    box-sizing: border-box;
+  }
+  .crate-roll-item .ri-preview {
+    width: 40px; height: 40px; border-radius: 8px; margin-bottom: 6px;
+  }
+  .crate-roll-item.r-common { border-color: #888; }
+  .crate-roll-item.r-rare { border-color: #4fc3f7; box-shadow: 0 0 8px rgba(79,195,247,0.35); }
+  .crate-roll-item.r-epic { border-color: #ce93d8; box-shadow: 0 0 10px rgba(206,147,216,0.4); }
+  .crate-roll-item.r-legendary { border-color: #ffc107; box-shadow: 0 0 12px rgba(255,193,7,0.45); }
+  .crate-roll-item.r-omnipotent {
+    border-color: #fff;
+    background: linear-gradient(135deg, #ff004c, #ffee00, #00e676, #00b0ff, #d500f9);
+    background-size: 300% 300%;
+    animation: card-shift 2s linear infinite;
+    color: #111;
+    font-weight: 800;
+  }
+  .crate-pointer {
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 3px;
+    background: var(--accent);
+    transform: translateX(-50%);
+    z-index: 5;
+    box-shadow: 0 0 10px var(--accent);
+    pointer-events: none;
+  }
+  .crate-pointer::before {
+    content: '▼';
+    position: absolute;
+    top: 2px; left: 50%;
+    transform: translateX(-50%);
+    color: var(--accent);
+    font-size: 14px;
+  }
+  .crate-result {
+    text-align: center;
+    margin: 16px 0;
+    min-height: 48px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .inv-type-tabs {
+    display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px;
+  }
+  .inv-type-tabs button { font-size: 13px; padding: 8px 12px; }
+  .inv-type-tabs button.active {
+    border-color: var(--accent2);
+    background: #1a2a3a;
+  }
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .inv-item {
+    background: var(--panel);
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .inv-item.r-common { border-color: #666; }
+  .inv-item.r-rare { border-color: #4fc3f7; }
+  .inv-item.r-epic { border-color: #ce93d8; }
+  .inv-item.r-legendary { border-color: #ffc107; }
+  .inv-item.r-omnipotent {
+    border-color: #fff;
+    background: linear-gradient(135deg, #2a1030, #102030);
+    animation: card-hue 4s linear infinite;
+  }
+  .inv-item .rarity-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+    opacity: 0.85;
+  }
+  .rarity-common { color: #bbb; }
+  .rarity-rare { color: #4fc3f7; }
+  .rarity-epic { color: #ce93d8; }
+  .rarity-legendary { color: #ffc107; }
+  .rarity-omnipotent {
+    background: linear-gradient(90deg, #ff004c, #ffee00, #00b0ff, #d500f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+  }
+
   /* ===== EDITOR ===== */
   #editor-screen .toolbar {
     display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px;
@@ -540,17 +909,74 @@
     background: var(--panel); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px;
   }
 
-  /* ===== BACKGROUND SKINS ===== */
-  body.bg-stars { background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); }
-  body.bg-nebula { background: linear-gradient(135deg, #1a0a2e, #0a1a2e, #0a0a1a); }
-  body.bg-grid {
+  /* ===== BACKGROUND SKINS (on fixed #site-bg — viewport locked) ===== */
+  #site-bg.bg-stars { background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); background-size: cover; }
+  #site-bg.bg-nebula { background: linear-gradient(135deg, #1a0a2e, #0a1a2e, #0a0a1a); background-size: cover; }
+  #site-bg.bg-grid {
     background-color: #0a0a12;
     background-image:
       linear-gradient(rgba(255,102,170,0.05) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,102,170,0.05) 1px, transparent 1px);
     background-size: 40px 40px;
   }
-  body.bg-ocean { background: linear-gradient(180deg, #0a1628, #0a0a12); }
+  #site-bg.bg-ocean { background: linear-gradient(180deg, #0a1628, #0a0a12); background-size: cover; }
+  #site-bg.cbg-dim { background: linear-gradient(180deg, #121218, #0a0a0e); background-size: cover; }
+  #site-bg.cbg-glow { background: radial-gradient(ellipse at center, #1a2040 0%, #0a0a12 70%); background-size: cover; }
+  #site-bg.cbg-rift { background: linear-gradient(135deg, #1a0a20, #0a1020, #200a18); background-size: cover; }
+  #site-bg.cbg-eclipse { background: radial-gradient(circle at 50% 20%, #3a2030, #0a0a12 60%); background-size: cover; }
+  #site-bg.cbg-omni {
+    background: linear-gradient(135deg, #1a0520, #051a20, #1a1505, #1a0520);
+    background-size: 300% 300%;
+    animation: card-shift 12s ease infinite;
+  }
+
+  .settings-tabs button.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #3a2a45, #2a1a35);
+  }
+  .ui-prev-lane {
+    position: absolute; top: 0; bottom: 0; width: 25%;
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.08);
+  }
+  .ui-prev-rec {
+    position: absolute;
+    width: 28px; height: 28px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    left: 12.5%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+  }
+  .ui-prev-rec[data-lane="1"] { left: 37.5%; }
+  .ui-prev-rec[data-lane="2"] { left: 62.5%; }
+  .ui-prev-rec[data-lane="3"] { left: 87.5%; }
+  .ui-prev-jud {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--perfect);
+    text-shadow: 0 0 8px currentColor;
+    pointer-events: auto;
+    user-select: none;
+  }
+  .ui-prev-note {
+    position: absolute;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    left: 37.5%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  #ui-preview-wrap.move-mode .ui-prev-rec,
+  #ui-preview-wrap.move-mode .ui-prev-jud {
+    cursor: grab;
+    outline: 1px dashed rgba(255,102,170,0.5);
+  }
+  #ui-preview-wrap.move-mode .ui-prev-rec:active,
+  #ui-preview-wrap.move-mode .ui-prev-jud:active { cursor: grabbing; }
 
   .back-btn { margin-bottom: 12px; }
   .hidden { display: none !important; }
@@ -558,6 +984,7 @@
 </style>
 </head>
 <body>
+<div id="site-bg" aria-hidden="true"></div>
 <div id="app">
   <!-- MAIN MENU -->
   <div id="main-menu" class="screen active">
@@ -572,8 +999,12 @@
       <button onclick="startInfiniteMode()" style="border-color:#66ccff;">INFINITE</button>
       <button onclick="showScreen('editor-screen')">Map Editor</button>
       <button onclick="showScreen('shop-screen')">Shop</button>
+      <button onclick="showScreen('crates-screen')">Crates</button>
       <button onclick="showScreen('custom-screen')">My Maps</button>
       <button onclick="showScreen('stats-screen')">Stats</button>
+      <button onclick="showScreen('afk-screen')" style="border-color:#88ff88;">AFK</button>
+      <button onclick="showScreen('rank-screen')">Rank</button>
+      <button onclick="showScreen('profile-screen')">Profile</button>
       <button onclick="showScreen('settings-screen')">Settings</button>
     </div>
   </div>
@@ -600,9 +1031,9 @@
     <div class="game-header">
       <button onclick="quitGame()">Quit</button>
       <div class="game-stats">
-        <div>Score: <span class="val" id="score">0</span></div>
-        <div>Combo: <span class="val" id="combo">0</span></div>
-        <div>Acc: <span class="val" id="acc">100%</span></div>
+        <div id="hud-score">Score: <span class="val" id="score">0</span></div>
+        <div id="hud-combo">Combo: <span class="val" id="combo">0</span></div>
+        <div id="hud-acc">Acc: <span class="val" id="acc">100%</span></div>
         <div id="hits-stat" class="hidden">Hits: <span class="val" id="hits-count">0</span></div>
       </div>
       <div id="map-name-display"></div>
@@ -611,6 +1042,7 @@
       Next: <strong id="next-pattern-name">—</strong>
     </div>
     <div id="playfield-wrap">
+      <div id="playfield-dim" style="position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:0;"></div>
       <div id="playfield">
         <div class="lane"><div class="receptor" data-lane="0"></div><div class="hit-flash" data-lane="0"></div></div>
         <div class="lane"><div class="receptor" data-lane="1"></div><div class="hit-flash" data-lane="1"></div></div>
@@ -697,6 +1129,11 @@
     <div class="shop-grid" id="shop-trails"></div>
     <h3 style="margin-top:20px;color:#aaa;">Backgrounds</h3>
     <div class="shop-grid" id="shop-bgs"></div>
+    <h3 style="margin-top:20px;color:#aaa;">Profile Card Backgrounds</h3>
+    <div class="shop-grid" id="shop-cardbgs"></div>
+    <h3 style="margin-top:20px;color:#aaa;">Site Fonts</h3>
+    <p style="color:#888;font-size:12px;margin:4px 0 8px;">Applies to the whole UI. Not part of the custom texture pack.</p>
+    <div class="shop-grid" id="shop-fonts"></div>
     <h3 style="margin-top:20px;color:#aaa;">Custom</h3>
     <div class="shop-grid" id="shop-custom"></div>
   </div>
@@ -746,6 +1183,164 @@
     <div class="custom-list" id="custom-list"></div>
   </div>
 
+  <!-- CRATES -->
+  <div id="crates-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Crates</h2>
+    <p style="color:#888;font-size:13px;">Buy crates, save them, open when you're ready. Crate cosmetics are exclusive — not sold in the Shop.</p>
+    <div class="crate-tabs">
+      <button class="active" data-ctab="buy" onclick="switchCrateTab('buy')">Buy</button>
+      <button data-ctab="owned" onclick="switchCrateTab('owned')">My Crates (<span id="crate-count-label">0</span>)</button>
+      <button data-ctab="inv" onclick="switchCrateTab('inv')">Inventory</button>
+    </div>
+
+    <div id="crate-panel-buy" class="crate-panel active">
+      <div class="crate-buy-card">
+        <div class="crate-art">📦</div>
+        <h3>Cosmetic Crate</h3>
+        <p style="color:#aaa;font-size:13px;margin:8px 0;">One random exclusive cosmetic. Commons to Omnipotent.</p>
+        <div style="color:var(--accent2);font-weight:700;font-size:1.2rem;margin:10px 0;">5,000 coins</div>
+        <button class="primary" onclick="buyCrate()">Buy Crate</button>
+        <p style="color:#666;font-size:12px;margin-top:10px;">You own: <strong id="crate-owned-inline">0</strong></p>
+      </div>
+      <div style="margin-top:18px;max-width:420px;color:#888;font-size:12px;">
+        <strong style="color:#aaa;">Drop rates:</strong>
+        Common 50% · Rare 30% · Epic 15% · Legendary 4.5% · Omnipotent 0.5%
+      </div>
+    </div>
+
+    <div id="crate-panel-owned" class="crate-panel">
+      <p style="color:#888;font-size:13px;margin-bottom:8px;">Unopened crates. Open one when you're ready.</p>
+      <div class="owned-crates-list" id="owned-crates-list"></div>
+      <div id="crate-opener" class="hidden" style="margin-top:20px;">
+        <div class="crate-roll-wrap">
+          <div class="crate-pointer"></div>
+          <div class="crate-roll-track" id="crate-roll-track"></div>
+        </div>
+        <div class="crate-result" id="crate-result"></div>
+        <div style="text-align:center;">
+          <button id="crate-open-btn" class="primary" onclick="startCrateRoll()">Open Crate</button>
+          <button id="crate-done-btn" class="hidden" onclick="finishCrateRoll()">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="crate-panel-inv" class="crate-panel">
+      <div class="inv-type-tabs" id="inv-type-tabs"></div>
+      <div class="inv-grid" id="inv-grid"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profile-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Profile</h2>
+    <p style="color:#888;font-size:13px;margin-bottom:14px;">Customize how you appear. Titles come from the season XP track.</p>
+
+    <div id="profile-card-preview" class="profile-card-preview">
+      <div class="profile-card-bg" id="profile-card-bg"></div>
+      <div class="profile-card-content">
+        <div class="profile-avatar" id="profile-avatar-preview">?</div>
+        <div class="profile-meta">
+          <div class="profile-name" id="profile-name-preview">Player</div>
+          <div class="profile-title" id="profile-title-preview">No title equipped</div>
+          <div class="profile-rank-line" id="profile-rank-line">Unranked</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="max-width:420px;display:flex;flex-direction:column;gap:14px;margin-top:16px;">
+      <div style="background:var(--panel);padding:14px;border-radius:10px;">
+        <h4 style="margin-bottom:8px;">Display name</h4>
+        <input type="text" id="profile-name-input" maxlength="24" placeholder="Your name"
+          style="width:100%;background:#1a1a2e;border:1px solid #444;color:#fff;padding:8px 10px;border-radius:6px;">
+        <button style="margin-top:8px;" onclick="saveProfileName()">Save Name</button>
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;">
+        <h4 style="margin-bottom:8px;">Profile picture</h4>
+        <button onclick="document.getElementById('upload-avatar').click()">Upload Picture</button>
+        <button onclick="clearProfileAvatar()" style="margin-left:6px;">Clear</button>
+        <input type="file" id="upload-avatar" accept="image/*" style="display:none">
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;">
+        <h4 style="margin-bottom:8px;">Title</h4>
+        <select id="profile-title-select"
+          style="width:100%;background:#1a1a2e;border:1px solid #444;color:#fff;padding:8px;border-radius:6px;"></select>
+        <p style="color:#666;font-size:12px;margin-top:6px;">Earn titles from Rank → Season XP rewards.</p>
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;">
+        <h4 style="margin-bottom:8px;">Card background</h4>
+        <p style="color:#888;font-size:12px;margin-bottom:8px;">Buy more in the Shop. Some are animated.</p>
+        <div id="profile-cardbg-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RANK -->
+  <div id="rank-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>Rank</h2>
+    <div id="rank-calc-panel" style="margin:16px 0;max-width:420px;">
+      <p style="color:#aaa;font-size:14px;margin-bottom:12px;">
+        Your rank is calculated from your lifetime Perfect / Great / Good / Miss ratio.
+        You need at least <strong>50 judged notes</strong> before calculating.
+      </p>
+      <div id="rank-status" style="margin-bottom:12px;"></div>
+      <button class="primary" id="rank-calc-btn" onclick="calculateRank()">Calculate Rank</button>
+      <button id="rank-recalc-btn" class="hidden" onclick="calculateRank()" style="margin-left:8px;">Recalculate</button>
+    </div>
+    <h3 style="margin-top:20px;color:#aaa;">Season <span id="season-id-label">1</span> · XP Track</h3>
+    <div class="xp-bar-wrap">
+      <div style="display:flex;justify-content:space-between;font-size:14px;">
+        <span>Level <strong id="xp-level">0</strong> / 50</span>
+        <span id="xp-frac" style="color:var(--accent2);">0 XP</span>
+      </div>
+      <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div></div>
+    </div>
+    <p style="color:#888;font-size:13px;">Earn XP by finishing maps and Infinite runs. Claim rewards as you level up.</p>
+    <div class="reward-list" id="reward-list"></div>
+  </div>
+
+  <!-- AFK -->
+  <div id="afk-screen" class="screen">
+    <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
+    <h2>AFK Farm</h2>
+    <p style="color:#888;font-size:13px;max-width:420px;">
+      Stay on this screen to earn coins. Base rate is <strong>3 coins/sec</strong>.
+      Every <strong>60 seconds</strong> here, your multiplier goes up by <strong>+0.02×</strong>.
+      Leaving this screen stops farming and resets the session multiplier.
+    </p>
+    <div style="max-width:400px;margin:20px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="background:var(--panel);padding:14px;border-radius:10px;border:1px solid #333;">
+        <div style="color:#888;font-size:11px;text-transform:uppercase;">Session time</div>
+        <div id="afk-session-time" style="font-size:1.5rem;font-weight:800;color:var(--accent2);font-variant-numeric:tabular-nums;">0s</div>
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;border:1px solid #333;">
+        <div style="color:#888;font-size:11px;text-transform:uppercase;">Multiplier</div>
+        <div id="afk-mult" style="font-size:1.5rem;font-weight:800;color:#88ff88;font-variant-numeric:tabular-nums;">1.00×</div>
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;border:1px solid #333;">
+        <div style="color:#888;font-size:11px;text-transform:uppercase;">Rate</div>
+        <div id="afk-rate" style="font-size:1.5rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;">3.0/s</div>
+      </div>
+      <div style="background:var(--panel);padding:14px;border-radius:10px;border:1px solid #333;">
+        <div style="color:#888;font-size:11px;text-transform:uppercase;">Session earned</div>
+        <div id="afk-session-coins" style="font-size:1.5rem;font-weight:800;color:var(--perfect);font-variant-numeric:tabular-nums;">0</div>
+      </div>
+    </div>
+    <div style="background:var(--panel);padding:14px 16px;border-radius:10px;border:1px solid #333;max-width:400px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="color:#888;font-size:13px;">Lifetime AFK time</span>
+        <span id="afk-total-time" style="color:var(--accent2);font-weight:700;">0s</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:#888;font-size:13px;">Balance</span>
+        <span id="afk-balance" style="color:#fff;font-weight:700;">0</span>
+      </div>
+      <div style="margin-top:10px;color:#666;font-size:12px;">Next +0.02× in <strong id="afk-next-mult" style="color:#aaa;">60s</strong></div>
+    </div>
+  </div>
+
   <!-- STATS -->
   <div id="stats-screen" class="screen">
     <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
@@ -759,18 +1354,94 @@
   <div id="settings-screen" class="screen">
     <button class="back-btn" onclick="showScreen('main-menu')">← Back</button>
     <h2>Settings</h2>
-
-    <h3 style="margin-top:18px;color:#aaa;">Scroll Speed (visual only)</h3>
-    <p style="color:#888;font-size:13px;">Only changes how fast notes move on screen. Does NOT change BPM, note timing, or gaps between hits.</p>
-    <div style="display:flex;align-items:center;gap:12px;margin:10px 0 20px;">
-      <input type="range" id="scroll-speed-slider" min="0.5" max="2.5" step="0.1" value="1.0" style="flex:1;accent-color:#ff66aa;">
-      <span id="scroll-speed-val" style="min-width:40px;color:var(--accent2);font-weight:600;">1.0x</span>
+    <div class="settings-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;">
+      <button class="active" data-stab="general" onclick="switchSettingsTab('general')">General</button>
+      <button data-stab="ui" onclick="switchSettingsTab('ui')">UI</button>
+      <button data-stab="keybinds" onclick="switchSettingsTab('keybinds')">Keybinds</button>
     </div>
 
-    <h3 style="margin-top:10px;color:#aaa;">Keybinds</h3>
-    <p style="color:#888;font-size:13px;margin-bottom:10px;">Click a button, then press the key you want.</p>
-    <div id="keybind-list" style="display:flex;flex-direction:column;gap:8px;max-width:320px;"></div>
-    <button style="margin-top:14px;" onclick="resetKeybinds()">Reset to D F J K</button>
+    <div id="settings-panel-general" class="settings-panel">
+      <h3 style="color:#aaa;">Scroll Speed (visual only)</h3>
+      <p style="color:#888;font-size:13px;">Only changes how fast notes move on screen. Does NOT change BPM, note timing, or gaps between hits.</p>
+      <div style="display:flex;align-items:center;gap:12px;margin:10px 0 20px;max-width:360px;">
+        <input type="range" id="scroll-speed-slider" min="0.5" max="2.5" step="0.1" value="1.0" style="flex:1;accent-color:#ff66aa;">
+        <span id="scroll-speed-val" style="min-width:40px;color:var(--accent2);font-weight:600;">1.0x</span>
+      </div>
+    </div>
+
+    <div id="settings-panel-ui" class="settings-panel" style="display:none;">
+      <p style="color:#888;font-size:13px;margin-bottom:12px;">Playfield layout only affects gameplay. Preview updates live.</p>
+
+      <div id="ui-preview-wrap" style="position:relative;width:min(280px,90vw);height:320px;margin:0 auto 16px;background:rgba(0,0,0,0.55);border:2px solid #333;border-radius:10px;overflow:hidden;">
+        <div id="ui-preview-pf" style="position:relative;width:100%;height:100%;">
+          <div class="ui-prev-lane" style="left:0%"></div>
+          <div class="ui-prev-lane" style="left:25%"></div>
+          <div class="ui-prev-lane" style="left:50%"></div>
+          <div class="ui-prev-lane" style="left:75%;box-shadow:none;"></div>
+          <div id="ui-prev-receptors">
+            <div class="ui-prev-rec" data-lane="0"></div>
+            <div class="ui-prev-rec" data-lane="1"></div>
+            <div class="ui-prev-rec" data-lane="2"></div>
+            <div class="ui-prev-rec" data-lane="3"></div>
+          </div>
+          <div id="ui-prev-judgment" class="ui-prev-jud">PERFECT</div>
+          <div id="ui-prev-note" class="ui-prev-note"></div>
+        </div>
+        <div id="ui-move-hint" class="hidden" style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:11px;color:#ff66aa;pointer-events:none;">Move mode: drag receptors or judgment</div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;justify-content:center;">
+        <button id="ui-move-btn" onclick="toggleUiMoveMode()">Move tool</button>
+        <button onclick="resetUiLayout()">Reset layout</button>
+      </div>
+
+      <h3 style="color:#aaa;margin-top:8px;">Lane thickness</h3>
+      <p style="color:#888;font-size:12px;">How wide notes / receptors feel in each lane.</p>
+      <div style="display:flex;align-items:center;gap:12px;margin:8px 0 14px;max-width:360px;">
+        <input type="range" id="lane-thick-slider" min="0.6" max="1.4" step="0.05" value="1.0" style="flex:1;accent-color:#ff66aa;">
+        <span id="lane-thick-val" style="min-width:40px;color:var(--accent2);font-weight:600;">1.0x</span>
+      </div>
+
+      <h3 style="color:#aaa;">Lane height</h3>
+      <p style="color:#888;font-size:12px;">Playfield height while playing.</p>
+      <div style="display:flex;align-items:center;gap:12px;margin:8px 0 14px;max-width:360px;">
+        <input type="range" id="lane-height-slider" min="0.7" max="1.3" step="0.05" value="1.0" style="flex:1;accent-color:#ff66aa;">
+        <span id="lane-height-val" style="min-width:40px;color:var(--accent2);font-weight:600;">1.0x</span>
+      </div>
+
+      <h3 style="color:#aaa;margin-top:12px;">HUD toggles</h3>
+      <div id="hud-settings" style="display:flex;flex-direction:column;gap:8px;max-width:360px;"></div>
+
+      <h3 style="margin-top:16px;color:#aaa;">Background Dim</h3>
+      <div style="display:flex;align-items:center;gap:12px;margin:8px 0 14px;max-width:360px;">
+        <input type="range" id="bg-dim-slider" min="0" max="0.85" step="0.05" value="0.35" style="flex:1;accent-color:#ff66aa;">
+        <span id="bg-dim-val" style="min-width:44px;color:var(--accent2);font-weight:600;">35%</span>
+      </div>
+
+      <h3 style="color:#aaa;">Judgment Duration</h3>
+      <div style="display:flex;align-items:center;gap:12px;margin:8px 0 14px;max-width:360px;">
+        <input type="range" id="jud-dur-slider" min="200" max="1000" step="50" value="500" style="flex:1;accent-color:#ff66aa;">
+        <span id="jud-dur-val" style="min-width:52px;color:var(--accent2);font-weight:600;">500ms</span>
+      </div>
+    </div>
+
+    <div id="settings-panel-keybinds" class="settings-panel" style="display:none;">
+      <h3 style="color:#aaa;">Keybinds</h3>
+      <p style="color:#888;font-size:13px;margin-bottom:10px;">Click a button, then press the key you want.</p>
+      <div id="keybind-list" style="display:flex;flex-direction:column;gap:8px;max-width:320px;"></div>
+      <button style="margin-top:14px;" onclick="resetKeybinds()">Reset to D F J K</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating rank badge + title card -->
+<button id="rank-badge" class="hidden" title="Your rank" onclick="openRankCard()"></button>
+<div id="rank-card-overlay" onclick="closeRankCard()">
+  <div id="rank-card">
+    <div class="rank-emoji" id="rank-card-emoji">❓</div>
+    <div class="rank-name" id="rank-card-name">Unranked</div>
+    <div class="rank-sub" id="rank-card-sub">Calculate your rank in the Rank tab</div>
+    <div class="rank-hint">Click anywhere to close</div>
   </div>
 </div>
 
@@ -795,6 +1466,7 @@ const DEFAULT_STATS = {
   totalScore: 0,
   coinsEarned: 0,
   playTimeMs: 0,
+  afkTimeMs: 0,
   sGrades: 0,
   aGrades: 0,
   fullCombos: 0,
@@ -804,15 +1476,133 @@ const DEFAULT_STATS = {
 let state = {
   coins: 0,
   bestAcc: 0,
-  owned: { skins: ['default'], shapes: ['circle'], trails: ['none'], bgs: ['default'], customSkin: false },
-  equipped: { skin: 'default', shape: 'circle', trail: 'none', bg: 'default', useCustom: false },
+  owned: {
+    skins: ['default'], shapes: ['circle'], trails: ['none'], bgs: ['default'],
+    customSkin: false,
+    fonts: ['default'],
+    cardBgs: ['default']
+  },
+  equipped: {
+    skin: 'default', shape: 'circle', trail: 'none', bg: 'default', useCustom: false,
+    font: 'default',
+    cardBg: 'default',
+    title: ''
+  },
+  profile: {
+    name: 'Player',
+    avatar: null
+  },
   // custom uploaded images as data URLs (scaled/compressed)
   customImages: { note: null, receptor: null, bg: null },
   customMaps: [],
   keybinds: ['KeyD', 'KeyF', 'KeyJ', 'KeyK'],
   scrollSpeed: 1.0, // user setting, 0.5 – 2.5
-  stats: { ...DEFAULT_STATS }
+  stats: { ...DEFAULT_STATS },
+  // HUD / QoL
+  showKeyHints: true,
+  showJudgment: true,
+  showJudgmentCombo: true,
+  showScoreHud: true,
+  showComboHud: true,
+  showAccHud: true,
+  hitFlash: true,
+  countdownEnabled: true,
+  bgDim: 0.35,
+  judgmentMs: 500,
+  // Playfield UI layout (gameplay only)
+  uiLayout: {
+    laneThickness: 1.0,
+    laneHeight: 1.0,
+    receptorBottom: 48,
+    judgmentTopPct: 38
+  },
+  // Rank + season XP (battle pass style, max 50)
+  rank: {
+    calculated: false,
+    rankId: null,
+    tier: 1,
+    score: 0,
+    calculatedAt: null
+  },
+  season: {
+    id: 1,
+    xp: 0,
+    claimed: []
+  },
+  titles: [],
+  crates: 0,
+  // Counts per item id: { skins: { cskin_ash: 2 }, ... }
+  crateInv: { skins: {}, shapes: {}, trails: {}, bgs: {}, cardBgs: {}, fonts: {} }
 };
+
+// Rank ladder (9 ranks × 3 tiers = 27 steps)
+const RANK_DEFS = [
+  { id: 'ant', name: 'Ant', emoji: '🐜', color: '#a67c2a' },
+  { id: 'beginner', name: 'Beginner', emoji: '🌱', color: '#4caf50' },
+  { id: 'progressing', name: 'Progressing', emoji: '📈', color: '#42a5f5' },
+  { id: 'copper', name: 'Copper', emoji: '🟤', color: '#b87333' },
+  { id: 'iron', name: 'Iron', emoji: '⚙️', color: '#90a4ae' },
+  { id: 'gold', name: 'Gold', emoji: '🥇', color: '#ffc107' },
+  { id: 'diamond', name: 'Diamond', emoji: '💎', color: '#4dd0e1' },
+  { id: 'godly', name: 'Godly', emoji: '✨', color: '#ce93d8' },
+  { id: 'ungodly', name: 'Ungodly', emoji: '🔥', color: '#ff1744' }
+];
+
+const TIER_ROMAN = ['I', 'II', 'III'];
+
+// Season rewards (levels 1–50). Claim when XP reaches that level.
+const SEASON_REWARDS = [
+  { level: 1, type: 'coins', amount: 50, label: '50 Coins' },
+  { level: 2, type: 'coins', amount: 75, label: '75 Coins' },
+  { level: 3, type: 'coins', amount: 100, label: '100 Coins' },
+  { level: 4, type: 'title', title: 'Warming Up', label: 'Title: Warming Up' },
+  { level: 5, type: 'coins', amount: 125, label: '125 Coins' },
+  { level: 6, type: 'coins', amount: 150, label: '150 Coins' },
+  { level: 7, type: 'coins', amount: 175, label: '175 Coins' },
+  { level: 8, type: 'title', title: 'Note Taker', label: 'Title: Note Taker' },
+  { level: 9, type: 'coins', amount: 200, label: '200 Coins' },
+  { level: 10, type: 'coins', amount: 250, label: '250 Coins' },
+  { level: 11, type: 'coins', amount: 200, label: '200 Coins' },
+  { level: 12, type: 'title', title: 'Lane Walker', label: 'Title: Lane Walker' },
+  { level: 13, type: 'coins', amount: 225, label: '225 Coins' },
+  { level: 14, type: 'coins', amount: 250, label: '250 Coins' },
+  { level: 15, type: 'coins', amount: 300, label: '300 Coins' },
+  { level: 16, type: 'title', title: 'Combo Seeker', label: 'Title: Combo Seeker' },
+  { level: 17, type: 'coins', amount: 275, label: '275 Coins' },
+  { level: 18, type: 'coins', amount: 300, label: '300 Coins' },
+  { level: 19, type: 'coins', amount: 325, label: '325 Coins' },
+  { level: 20, type: 'coins', amount: 400, label: '400 Coins' },
+  { level: 21, type: 'title', title: 'Stream Scout', label: 'Title: Stream Scout' },
+  { level: 22, type: 'coins', amount: 350, label: '350 Coins' },
+  { level: 23, type: 'coins', amount: 375, label: '375 Coins' },
+  { level: 24, type: 'coins', amount: 400, label: '400 Coins' },
+  { level: 25, type: 'coins', amount: 500, label: '500 Coins' },
+  { level: 26, type: 'title', title: 'Jack Hunter', label: 'Title: Jack Hunter' },
+  { level: 27, type: 'coins', amount: 400, label: '400 Coins' },
+  { level: 28, type: 'coins', amount: 425, label: '425 Coins' },
+  { level: 29, type: 'coins', amount: 450, label: '450 Coins' },
+  { level: 30, type: 'coins', amount: 600, label: '600 Coins' },
+  { level: 31, type: 'title', title: 'Chord Breaker', label: 'Title: Chord Breaker' },
+  { level: 32, type: 'coins', amount: 450, label: '450 Coins' },
+  { level: 33, type: 'coins', amount: 475, label: '475 Coins' },
+  { level: 34, type: 'coins', amount: 500, label: '500 Coins' },
+  { level: 35, type: 'coins', amount: 700, label: '700 Coins' },
+  { level: 36, type: 'title', title: 'Infinite Survivor', label: 'Title: Infinite Survivor' },
+  { level: 37, type: 'coins', amount: 550, label: '550 Coins' },
+  { level: 38, type: 'coins', amount: 575, label: '575 Coins' },
+  { level: 39, type: 'coins', amount: 600, label: '600 Coins' },
+  { level: 40, type: 'coins', amount: 800, label: '800 Coins' },
+  { level: 41, type: 'title', title: 'Precision Mind', label: 'Title: Precision Mind' },
+  { level: 42, type: 'coins', amount: 650, label: '650 Coins' },
+  { level: 43, type: 'coins', amount: 700, label: '700 Coins' },
+  { level: 44, type: 'coins', amount: 750, label: '750 Coins' },
+  { level: 45, type: 'coins', amount: 1000, label: '1000 Coins' },
+  { level: 46, type: 'title', title: 'Season Grinder', label: 'Title: Season Grinder' },
+  { level: 47, type: 'coins', amount: 800, label: '800 Coins' },
+  { level: 48, type: 'coins', amount: 900, label: '900 Coins' },
+  { level: 49, type: 'coins', amount: 1000, label: '1000 Coins' },
+  { level: 50, type: 'title', title: 'Season Champion', label: 'Title: Season Champion + 1500 Coins' }
+];
 
 let selectedPattern = null;
 let selectedBpm = 120;
@@ -872,7 +1662,18 @@ const PATTERNS = [
   // Chords
   { id: 'chords_1', type: 'chords', name: 'Chords I', desc: 'Simple 2-key chords', difficulty: 2 },
   { id: 'chords_2', type: 'chords', name: 'Chords II', desc: '3-key chords on beat', difficulty: 2 },
-  { id: 'chords_3', type: 'chords', name: 'Chords III', desc: 'Full hands + offbeats', difficulty: 3 }
+  { id: 'chords_3', type: 'chords', name: 'Chords III', desc: 'Full hands + offbeats', difficulty: 3 },
+  // Extra Chords II–style maps (allowed in Infinite)
+  { id: 'chords_4', type: 'chords', name: 'Chords IV', desc: '3-key chords, alternating sets', difficulty: 2 },
+  { id: 'chords_5', type: 'chords', name: 'Chords V', desc: '3-key chords + opposite offbeats', difficulty: 2 },
+  { id: 'chords_6', type: 'chords', name: 'Chords VI', desc: '3-key chords with double offbeats', difficulty: 3 },
+  { id: 'chords_7', type: 'chords', name: 'Chords VII', desc: 'Rolling 3-key windows', difficulty: 2 },
+  { id: 'chords_8', type: 'chords', name: 'Chords VIII', desc: 'Mirrored 3-key hand swaps', difficulty: 2 },
+  { id: 'chords_9', type: 'chords', name: 'Chords IX', desc: '3-key on beat, 2-key on half', difficulty: 3 },
+  { id: 'chords_10', type: 'chords', name: 'Chords X', desc: '3-key chords + lane echoes', difficulty: 3 },
+  { id: 'chords_11', type: 'chords', name: 'Chords XI', desc: 'Chords II with breathing gaps', difficulty: 2 },
+  { id: 'chords_12', type: 'chords', name: 'Chords XII', desc: '3-key chords with quarter fillers', difficulty: 3 },
+  { id: 'chords_13', type: 'chords', name: 'Chords XIII', desc: 'Chords II with occasional hands', difficulty: 3 }
 ];
 
 // seeded RNG so each map is consistent every play
@@ -1086,19 +1887,80 @@ function generateMap(patternId, bpm, durationBeats = 64) {
       break;
     }
     case 'chords': {
-      for (let b = 0; b < durationBeats; b += 1) {
-        const count = variant === 1 ? 2 : variant === 2 ? 3 : (2 + randInt(3));
-        const used = new Set();
-        for (let i = 0; i < count; i++) {
-          let l;
-          do { l = randInt(4); } while (used.has(l));
-          used.add(l);
-          add(l, b);
+      if (variant <= 3) {
+        for (let b = 0; b < durationBeats; b += 1) {
+          const count = variant === 1 ? 2 : variant === 2 ? 3 : (2 + randInt(3));
+          const used = new Set();
+          for (let i = 0; i < count; i++) {
+            let l;
+            do { l = randInt(4); } while (used.has(l));
+            used.add(l);
+            add(l, b);
+          }
+          if (variant >= 2) add(randInt(4), b + 0.5);
+          if (variant === 3 && rand() > 0.5) {
+            add(randInt(4), b + 0.25);
+            add(randInt(4), b + 0.75);
+          }
         }
-        if (variant >= 2) add(randInt(4), b + 0.5);
-        if (variant === 3 && rand() > 0.5) {
-          add(randInt(4), b + 0.25);
-          add(randInt(4), b + 0.75);
+      } else {
+        // Chords IV–XIII: all rooted in Chords II (3-key on beat + offbeat flavor)
+        for (let b = 0; b < durationBeats; b += 1) {
+          if (variant === 11 && Math.floor(b) % 4 === 3) {
+            // breathing gap every 4th bar-beat
+            if (rand() > 0.4) add(randInt(4), b + 0.5);
+            continue;
+          }
+          let lanes = [];
+          if (variant === 4) {
+            // alternating fixed 3-key sets
+            lanes = Math.floor(b) % 2 === 0 ? [0, 1, 2] : [1, 2, 3];
+          } else if (variant === 7) {
+            // rolling window
+            const s = Math.floor(b) % 4;
+            lanes = [s, (s + 1) % 4, (s + 2) % 4];
+          } else if (variant === 8) {
+            // mirrored hand swap
+            lanes = Math.floor(b) % 2 === 0 ? [0, 1, 3] : [0, 2, 3];
+          } else {
+            // random 3 unique lanes (classic II)
+            const used = new Set();
+            while (used.size < 3) used.add(randInt(4));
+            lanes = [...used];
+          }
+          lanes.forEach(l => add(l, b));
+
+          if (variant === 5) {
+            // opposite of a chord lane on half
+            const opp = (lanes[0] + 2) % 4;
+            add(opp, b + 0.5);
+          } else if (variant === 6) {
+            add(randInt(4), b + 0.5);
+            add(randInt(4), b + 0.5);
+          } else if (variant === 9) {
+            // 2-key chord on half-beat
+            const a = randInt(4);
+            let c = randInt(4);
+            if (c === a) c = (a + 1) % 4;
+            add(a, b + 0.5);
+            add(c, b + 0.5);
+          } else if (variant === 10) {
+            // echo one of the chord lanes
+            add(lanes[randInt(lanes.length)], b + 0.5);
+          } else if (variant === 12) {
+            add(randInt(4), b + 0.25);
+            add(randInt(4), b + 0.5);
+            add(randInt(4), b + 0.75);
+          } else if (variant === 13) {
+            if (rand() > 0.75) {
+              [0, 1, 2, 3].forEach(l => add(l, b));
+            } else {
+              add(randInt(4), b + 0.5);
+            }
+          } else {
+            // IV, VII, VIII, XI default offbeat like II
+            add(randInt(4), b + 0.5);
+          }
         }
       }
       break;
@@ -1122,7 +1984,7 @@ function loadState() {
     const raw = localStorage.getItem('mania4k_save');
     if (raw) {
       const data = JSON.parse(raw);
-      state.coins = data.coins ?? 0;
+      state.coins = Math.ceil(Number(data.coins) || 0);
       state.bestAcc = data.bestAcc ?? 0;
       if (data.owned) {
         state.owned.skins = data.owned.skins || ['default'];
@@ -1130,6 +1992,8 @@ function loadState() {
         state.owned.trails = data.owned.trails || ['none'];
         state.owned.bgs = data.owned.bgs || ['default'];
         state.owned.customSkin = !!data.owned.customSkin;
+        state.owned.fonts = data.owned.fonts || ['default'];
+        state.owned.cardBgs = data.owned.cardBgs || ['default'];
       }
       if (data.equipped) {
         state.equipped.skin = data.equipped.skin || 'default';
@@ -1138,6 +2002,15 @@ function loadState() {
         state.equipped.trail = data.equipped.trail || 'none';
         state.equipped.bg = data.equipped.bg || 'default';
         state.equipped.useCustom = !!data.equipped.useCustom;
+        state.equipped.font = data.equipped.font || 'default';
+        state.equipped.cardBg = data.equipped.cardBg || 'default';
+        state.equipped.title = data.equipped.title || '';
+      }
+      if (data.profile && typeof data.profile === 'object') {
+        state.profile = {
+          name: (data.profile.name || 'Player').slice(0, 24),
+          avatar: data.profile.avatar || null
+        };
       }
       if (!state.equipped.shape || state.equipped.shape === 'rect') {
         state.equipped.shape = 'circle';
@@ -1159,12 +2032,58 @@ function loadState() {
       if (data.stats && typeof data.stats === 'object') {
         state.stats = { ...DEFAULT_STATS, ...data.stats };
       }
+      const boolKeys = [
+        'showKeyHints', 'showJudgment', 'showJudgmentCombo',
+        'showScoreHud', 'showComboHud', 'showAccHud',
+        'hitFlash', 'countdownEnabled'
+      ];
+      for (const k of boolKeys) {
+        if (typeof data[k] === 'boolean') state[k] = data[k];
+      }
+      if (typeof data.bgDim === 'number') {
+        state.bgDim = Math.min(0.85, Math.max(0, data.bgDim));
+      }
+      if (typeof data.judgmentMs === 'number') {
+        state.judgmentMs = Math.min(1000, Math.max(200, data.judgmentMs));
+      }
+      if (data.uiLayout && typeof data.uiLayout === 'object') {
+        state.uiLayout = {
+          laneThickness: Math.min(1.4, Math.max(0.6, data.uiLayout.laneThickness ?? 1)),
+          laneHeight: Math.min(1.3, Math.max(0.7, data.uiLayout.laneHeight ?? 1)),
+          receptorBottom: Math.min(120, Math.max(20, data.uiLayout.receptorBottom ?? 48)),
+          judgmentTopPct: Math.min(70, Math.max(15, data.uiLayout.judgmentTopPct ?? 38))
+        };
+      }
+      if (data.rank && typeof data.rank === 'object') {
+        state.rank = {
+          calculated: !!data.rank.calculated,
+          rankId: data.rank.rankId || null,
+          tier: data.rank.tier || 1,
+          score: data.rank.score || 0,
+          calculatedAt: data.rank.calculatedAt || null
+        };
+      }
+      if (data.season && typeof data.season === 'object') {
+        state.season = {
+          id: data.season.id || 1,
+          xp: Math.min(50, Math.max(0, data.season.xp || 0)),
+          claimed: Array.isArray(data.season.claimed) ? data.season.claimed : []
+        };
+      }
+      if (Array.isArray(data.titles)) state.titles = data.titles;
+      if (typeof data.crates === 'number') state.crates = Math.max(0, data.crates);
+      if (data.crateInv && typeof data.crateInv === 'object') {
+        state.crateInv = normalizeCrateInv(data.crateInv);
+      }
     }
   } catch (e) { console.warn('Load failed', e); }
   saveState();
   applyEquipped();
+  applyFont();
+  applyPlayfieldLayout();
   updateCoinDisplays();
   updateKeyHints();
+  updateRankBadge();
 }
 
 function saveState() {
@@ -1182,8 +2101,8 @@ function scaleImageToDataURL(file, maxW, maxH, callback) {
     alert('Please upload an image file (png, jpg, webp, gif).');
     return;
   }
-  if (file.size > 8 * 1024 * 1024) {
-    alert('Image too large (max 8MB).');
+  if (file.size > 12 * 1024 * 1024) {
+    alert('Image too large (max 12MB).');
     return;
   }
   const reader = new FileReader();
@@ -1198,12 +2117,14 @@ function scaleImageToDataURL(file, maxW, maxH, callback) {
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.clearRect(0, 0, w, h);
       ctx.drawImage(img, 0, 0, w, h);
-      // prefer png for transparency on notes/receptors; jpeg for bg
+      // prefer png for transparency on notes/receptors; high-quality jpeg for bg
       const isBg = maxW >= 800;
       const dataUrl = isBg
-        ? canvas.toDataURL('image/jpeg', 0.82)
+        ? canvas.toDataURL('image/jpeg', 0.92)
         : canvas.toDataURL('image/png');
       callback(dataUrl);
     };
@@ -1215,8 +2136,10 @@ function scaleImageToDataURL(file, maxW, maxH, callback) {
 }
 
 function updateCoinDisplays() {
-  document.getElementById('coin-display').textContent = state.coins;
-  document.getElementById('shop-coins').textContent = state.coins;
+  // Always keep coins as whole numbers (round up)
+  state.coins = Math.ceil(Number(state.coins) || 0);
+  document.getElementById('coin-display').textContent = state.coins.toLocaleString();
+  document.getElementById('shop-coins').textContent = state.coins.toLocaleString();
   document.getElementById('best-acc').textContent = state.bestAcc.toFixed(1) + '%';
 }
 
@@ -1254,6 +2177,7 @@ function renderStats() {
     ['A Grades', s.aGrades],
     ['Full Combos', s.fullCombos],
     ['Play Time', formatPlayTime(s.playTimeMs)],
+    ['AFK Time', formatPlayTime(s.afkTimeMs)],
     ['Quits Mid-Run', s.quits]
   ];
   const grid = document.getElementById('stats-grid');
@@ -1269,24 +2193,279 @@ function resetStats() {
   renderStats();
 }
 
+// ===================== AFK FARM =====================
+let afkInterval = null;
+let afkSessionSec = 0;
+let afkSessionCoins = 0;
+let afkMult = 1.0;
+
+function formatAfkClock(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
+  if (m > 0) return m + 'm ' + s + 's';
+  return s + 's';
+}
+
+function updateAfkDisplay() {
+  const rate = 3 * afkMult;
+  const el = (id, v) => { const n = document.getElementById(id); if (n) n.textContent = v; };
+  el('afk-session-time', formatAfkClock(afkSessionSec));
+  el('afk-mult', afkMult.toFixed(2) + '×');
+  el('afk-rate', rate.toFixed(2) + '/s');
+  el('afk-session-coins', Math.ceil(afkSessionCoins).toLocaleString());
+  el('afk-total-time', formatPlayTime(state.stats.afkTimeMs || 0));
+  el('afk-balance', Math.ceil(state.coins).toLocaleString());
+  const nextIn = 60 - (afkSessionSec % 60);
+  el('afk-next-mult', (nextIn === 60 && afkSessionSec > 0 ? 60 : nextIn) + 's');
+}
+
+function startAfkFarm() {
+  stopAfkFarm(false);
+  afkSessionSec = 0;
+  afkSessionCoins = 0;
+  afkMult = 1.0;
+  updateAfkDisplay();
+  afkInterval = setInterval(() => {
+    afkSessionSec += 1;
+    // Multiplier: +0.02 every 60 seconds stayed on this screen
+    afkMult = 1 + Math.floor(afkSessionSec / 60) * 0.02;
+    const gain = Math.ceil(3 * afkMult);
+    afkSessionCoins += gain;
+    state.coins += gain;
+    state.stats.afkTimeMs = (state.stats.afkTimeMs || 0) + 1000;
+    // Persist periodically
+    if (afkSessionSec % 5 === 0) saveState();
+    updateAfkDisplay();
+    updateCoinDisplays();
+  }, 1000);
+}
+
+function stopAfkFarm(doSave = true) {
+  if (afkInterval) {
+    clearInterval(afkInterval);
+    afkInterval = null;
+    if (doSave) saveState();
+  }
+  afkSessionSec = 0;
+  afkSessionCoins = 0;
+  afkMult = 1.0;
+}
+
+// ===================== RANK + SEASON XP =====================
+function getRankDef(id) {
+  return RANK_DEFS.find(r => r.id === id) || null;
+}
+
+function formatRankLabel(rankId, tier) {
+  const def = getRankDef(rankId);
+  if (!def) return 'Unranked';
+  const t = TIER_ROMAN[(tier || 1) - 1] || 'I';
+  return def.name + ' ' + t;
+}
+
+/** Weighted skill score 0–100 from lifetime judgments. */
+function computeJudgmentScore(stats) {
+  const p = stats.perfects || 0;
+  const g = stats.greats || 0;
+  const o = stats.goods || 0;
+  const m = stats.misses || 0;
+  const total = p + g + o + m;
+  if (total < 50) return { ok: false, total, score: 0 };
+  // Weighted accuracy (same scale as in-game)
+  const wAcc = (p * 1 + g * 0.65 + o * 0.3) / total * 100;
+  const perfectRate = p / total;
+  const missRate = m / total;
+  // Blend: accuracy dominates, perfect rate boosts, misses punish
+  let score = wAcc * 0.72 + perfectRate * 100 * 0.28 - missRate * 40;
+  score = Math.max(0, Math.min(100, score));
+  return { ok: true, total, score, wAcc, perfectRate, missRate };
+}
+
+/** Map 0–100 score → rank + tier (I/II/III). */
+function scoreToRank(score) {
+  // 27 steps across 9 ranks
+  const steps = RANK_DEFS.length * 3;
+  let idx = Math.floor((score / 100) * steps);
+  if (idx >= steps) idx = steps - 1;
+  if (idx < 0) idx = 0;
+  const rankIndex = Math.floor(idx / 3);
+  const tier = (idx % 3) + 1;
+  return { rankId: RANK_DEFS[rankIndex].id, tier, step: idx };
+}
+
+function calculateRank() {
+  const result = computeJudgmentScore(state.stats);
+  if (!result.ok) {
+    alert('Need at least 50 judged notes (Perfect + Great + Good + Miss) before calculating rank. Keep playing!');
+    return;
+  }
+  const mapped = scoreToRank(result.score);
+  state.rank = {
+    calculated: true,
+    rankId: mapped.rankId,
+    tier: mapped.tier,
+    score: Math.round(result.score * 10) / 10,
+    calculatedAt: Date.now()
+  };
+  saveState();
+  updateRankBadge();
+  renderRankScreen();
+  alert('Rank set: ' + formatRankLabel(mapped.rankId, mapped.tier) + ' (score ' + state.rank.score + ')');
+}
+
+function updateRankBadge() {
+  const badge = document.getElementById('rank-badge');
+  if (!badge) return;
+  // Don't show during game
+  const gameScreen = document.getElementById('game-screen');
+  if (gameScreen && gameScreen.classList.contains('active')) {
+    badge.classList.add('hidden');
+    return;
+  }
+  if (!state.rank.calculated || !state.rank.rankId) {
+    badge.classList.add('hidden');
+    return;
+  }
+  const def = getRankDef(state.rank.rankId);
+  if (!def) {
+    badge.classList.add('hidden');
+    return;
+  }
+  badge.classList.remove('hidden');
+  badge.textContent = def.emoji;
+  badge.style.background = def.color;
+  badge.style.borderColor = 'rgba(255,255,255,0.45)';
+  badge.title = formatRankLabel(state.rank.rankId, state.rank.tier);
+}
+
+function openRankCard() {
+  if (!state.rank.calculated) return;
+  const def = getRankDef(state.rank.rankId);
+  if (!def) return;
+  document.getElementById('rank-card-emoji').textContent = def.emoji;
+  document.getElementById('rank-card-name').textContent = formatRankLabel(state.rank.rankId, state.rank.tier);
+  document.getElementById('rank-card-name').style.color = def.color;
+  document.getElementById('rank-card-sub').textContent =
+    'Skill score ' + (state.rank.score || 0) + ' · based on lifetime judgments';
+  document.getElementById('rank-card').style.borderColor = def.color;
+  document.getElementById('rank-card-overlay').classList.add('open');
+}
+
+function closeRankCard() {
+  document.getElementById('rank-card-overlay').classList.remove('open');
+}
+
+function renderRankScreen() {
+  const status = document.getElementById('rank-status');
+  const calcBtn = document.getElementById('rank-calc-btn');
+  const recalcBtn = document.getElementById('rank-recalc-btn');
+  const judged = (state.stats.perfects || 0) + (state.stats.greats || 0) +
+    (state.stats.goods || 0) + (state.stats.misses || 0);
+
+  if (state.rank.calculated && state.rank.rankId) {
+    const def = getRankDef(state.rank.rankId);
+    status.innerHTML =
+      `<div style="font-size:2.2rem;margin-bottom:4px;">${def ? def.emoji : '❓'}</div>` +
+      `<div style="font-size:1.4rem;font-weight:800;color:${def ? def.color : '#fff'};">${formatRankLabel(state.rank.rankId, state.rank.tier)}</div>` +
+      `<div style="color:#888;font-size:13px;margin-top:4px;">Skill score: ${state.rank.score} · ${judged} notes judged</div>`;
+    if (calcBtn) calcBtn.classList.add('hidden');
+    if (recalcBtn) recalcBtn.classList.remove('hidden');
+  } else {
+    status.innerHTML =
+      `<div style="color:#aaa;">Rank not calculated yet.</div>` +
+      `<div style="color:#666;font-size:13px;margin-top:4px;">Judged notes so far: ${judged} / 50 needed</div>`;
+    if (calcBtn) calcBtn.classList.remove('hidden');
+    if (recalcBtn) recalcBtn.classList.add('hidden');
+  }
+
+  // Season XP
+  const xp = Math.min(50, state.season.xp || 0);
+  document.getElementById('season-id-label').textContent = state.season.id || 1;
+  document.getElementById('xp-level').textContent = xp;
+  document.getElementById('xp-frac').textContent = xp + ' / 50 XP';
+  document.getElementById('xp-bar-fill').style.width = ((xp / 50) * 100) + '%';
+
+  const list = document.getElementById('reward-list');
+  if (!list) return;
+  list.innerHTML = '';
+  SEASON_REWARDS.forEach(rw => {
+    const unlocked = xp >= rw.level;
+    const claimed = (state.season.claimed || []).includes(rw.level);
+    const row = document.createElement('div');
+    row.className = 'reward-row' + (claimed ? ' claimed' : unlocked ? '' : ' locked');
+    let action = '';
+    if (claimed) action = '<span style="color:var(--great);font-size:13px;">Claimed</span>';
+    else if (unlocked) action = `<button onclick="claimSeasonReward(${rw.level})">Claim</button>`;
+    else action = '<span style="color:#666;font-size:13px;">Locked</span>';
+    row.innerHTML = `<span class="lvl">Lv ${rw.level}</span><span style="flex:1;">${rw.label}</span>${action}`;
+    list.appendChild(row);
+  });
+}
+
+function claimSeasonReward(level) {
+  if ((state.season.xp || 0) < level) return;
+  if ((state.season.claimed || []).includes(level)) return;
+  const rw = SEASON_REWARDS.find(r => r.level === level);
+  if (!rw) return;
+  if (rw.type === 'coins') {
+    state.coins += rw.amount;
+  } else if (rw.type === 'title') {
+    if (!state.titles.includes(rw.title)) state.titles.push(rw.title);
+    if (level === 50) state.coins += 1500; // champion bonus
+  }
+  state.season.claimed.push(level);
+  saveState();
+  updateCoinDisplays();
+  renderRankScreen();
+}
+
+/** Call after a finished run to grant season XP (capped at 50). */
+function grantSeasonXP(amount) {
+  if (!amount || amount <= 0) return;
+  const before = state.season.xp || 0;
+  state.season.xp = Math.min(50, before + amount);
+  saveState();
+}
+
 function applyEquipped() {
-  document.body.className = '';
+  // Keep body free of scaling backgrounds — all scene BGs live on fixed #site-bg
   document.body.style.backgroundImage = '';
   document.body.style.backgroundSize = '';
   document.body.style.backgroundPosition = '';
   document.body.style.backgroundRepeat = '';
+  document.body.style.backgroundColor = 'transparent';
+
+  const siteBg = document.getElementById('site-bg');
+  if (siteBg) {
+    siteBg.className = '';
+    siteBg.style.backgroundImage = '';
+    siteBg.style.backgroundSize = 'cover';
+    siteBg.style.backgroundPosition = 'center center';
+    siteBg.style.backgroundRepeat = 'no-repeat';
+    siteBg.style.backgroundColor = '';
+    siteBg.style.animation = '';
+  }
 
   const useCustom = state.owned.customSkin && state.equipped.useCustom;
 
-  // Background
-  if (useCustom && state.customImages.bg) {
-    document.body.style.backgroundImage = `url(${state.customImages.bg})`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundColor = '#0a0a12';
-  } else if (state.equipped.bg && state.equipped.bg !== 'default') {
-    document.body.classList.add('bg-' + state.equipped.bg);
+  // Background (viewport-locked layer)
+  if (siteBg) {
+    if (useCustom && state.customImages.bg) {
+      siteBg.style.backgroundImage = `url(${state.customImages.bg})`;
+      siteBg.style.backgroundSize = 'cover';
+      siteBg.style.backgroundPosition = 'center center';
+      siteBg.style.backgroundRepeat = 'no-repeat';
+      siteBg.style.backgroundColor = '#0a0a12';
+    } else if (state.equipped.bg && CRATE_BY_ID[state.equipped.bg] && CRATE_BY_ID[state.equipped.bg].css) {
+      siteBg.classList.add(CRATE_BY_ID[state.equipped.bg].css);
+    } else if (state.equipped.bg && state.equipped.bg !== 'default') {
+      siteBg.classList.add('bg-' + state.equipped.bg);
+    } else {
+      siteBg.style.backgroundColor = 'var(--bg)';
+    }
   }
 
   // Receptors: shape + optional custom image
@@ -1312,9 +2491,168 @@ function applyEquipped() {
       el.style.border = 'none';
       el.style.boxShadow = 'none';
       el.style.clipPath = 'none';
-    } else if (state.equipped.shape && state.equipped.shape !== 'circle') {
-      el.classList.add('shape-' + state.equipped.shape);
+    } else {
+      const crateShape = CRATE_BY_ID[state.equipped.shape];
+      if (crateShape && crateShape.shapeClass) {
+        el.classList.add(crateShape.shapeClass);
+      } else if (state.equipped.shape && state.equipped.shape !== 'circle' && !String(state.equipped.shape).startsWith('cshape_')) {
+        el.classList.add('shape-' + state.equipped.shape);
+      }
     }
+  });
+  applyFont();
+}
+
+const FONT_DEFS = {
+  default: { name: 'System', family: "'Segoe UI', system-ui, sans-serif", google: null, price: 0 },
+  inter: { name: 'Inter', family: "'Inter', system-ui, sans-serif", google: 'Inter:wght@400;600;800', price: 200 },
+  roboto: { name: 'Roboto', family: "'Roboto', system-ui, sans-serif", google: 'Roboto:wght@400;700', price: 180 },
+  poppins: { name: 'Poppins', family: "'Poppins', system-ui, sans-serif", google: 'Poppins:wght@400;600;800', price: 220 },
+  orbitron: { name: 'Orbitron', family: "'Orbitron', system-ui, sans-serif", google: 'Orbitron:wght@500;700', price: 350 },
+  rajdhani: { name: 'Rajdhani', family: "'Rajdhani', system-ui, sans-serif", google: 'Rajdhani:wght@500;700', price: 250 },
+  space: { name: 'Space Grotesk', family: "'Space Grotesk', system-ui, sans-serif", google: 'Space+Grotesk:wght@400;700', price: 280 },
+  mono: { name: 'JetBrains Mono', family: "'JetBrains Mono', ui-monospace, monospace", google: 'JetBrains+Mono:wght@400;700', price: 300 },
+  press: { name: 'Press Start', family: "'Press Start 2P', system-ui, sans-serif", google: 'Press+Start+2P', price: 400 }
+};
+
+const CARD_BG_DEFS = [
+  { id: 'default', name: 'Default', price: 0, animated: false, preview: 'linear-gradient(135deg,#1a1a2e,#2a1a3a)' },
+  { id: 'midnight', name: 'Midnight', price: 120, animated: false, preview: 'linear-gradient(135deg,#0a1628,#1a0a2e)' },
+  { id: 'ember', name: 'Ember', price: 150, animated: false, preview: 'linear-gradient(135deg,#2e0a0a,#3a1a0a)' },
+  { id: 'forest', name: 'Forest', price: 150, animated: false, preview: 'linear-gradient(135deg,#0a2e14,#0a1a12)' },
+  { id: 'aurora', name: 'Aurora', price: 400, animated: true, preview: 'linear-gradient(120deg,#0a2e2e,#1a0a3a,#0a2e1a)' },
+  { id: 'neon', name: 'Neon Flow', price: 500, animated: true, preview: 'linear-gradient(90deg,#ff0066,#6600ff,#00ccff)' },
+  { id: 'goldpulse', name: 'Gold Pulse', price: 450, animated: true, preview: 'linear-gradient(135deg,#3a2e0a,#5a4a10)' },
+  { id: 'prism', name: 'Prism', price: 600, animated: true, preview: 'linear-gradient(135deg,#ff004c,#ffee00,#00b0ff)' }
+];
+
+function ensureGoogleFont(googleSpec) {
+  if (!googleSpec) return;
+  const id = 'gf-' + googleSpec.replace(/[^a-z0-9]+/gi, '-');
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=' + googleSpec + '&display=swap';
+  document.head.appendChild(link);
+}
+
+function applyFont() {
+  const id = state.equipped.font || 'default';
+  // Crate-exclusive fonts
+  const crateFont = CRATE_BY_ID[id];
+  if (crateFont && crateFont.type === 'fonts') {
+    if (crateFont.google) ensureGoogleFont(crateFont.google);
+    document.body.style.fontFamily = crateFont.family || "'Segoe UI', system-ui, sans-serif";
+    return;
+  }
+  const def = FONT_DEFS[id] || FONT_DEFS.default;
+  if (def.google) ensureGoogleFont(def.google);
+  document.body.style.fontFamily = def.family;
+}
+
+function saveProfileName() {
+  const input = document.getElementById('profile-name-input');
+  const name = (input && input.value.trim()) || 'Player';
+  state.profile.name = name.slice(0, 24);
+  saveState();
+  renderProfile();
+}
+
+function clearProfileAvatar() {
+  state.profile.avatar = null;
+  saveState();
+  renderProfile();
+}
+
+function renderProfile() {
+  const name = state.profile.name || 'Player';
+  const nameInput = document.getElementById('profile-name-input');
+  if (nameInput) nameInput.value = name;
+  document.getElementById('profile-name-preview').textContent = name;
+
+  const av = document.getElementById('profile-avatar-preview');
+  if (av) {
+    if (state.profile.avatar) {
+      av.style.backgroundImage = `url(${state.profile.avatar})`;
+      av.textContent = '';
+    } else {
+      av.style.backgroundImage = '';
+      av.textContent = (name.charAt(0) || '?').toUpperCase();
+    }
+  }
+
+  const title = state.equipped.title || '';
+  document.getElementById('profile-title-preview').textContent =
+    title ? title : 'No title equipped';
+
+  if (state.rank.calculated && state.rank.rankId) {
+    const def = getRankDef(state.rank.rankId);
+    document.getElementById('profile-rank-line').textContent =
+      (def ? def.emoji + ' ' : '') + formatRankLabel(state.rank.rankId, state.rank.tier);
+  } else {
+    document.getElementById('profile-rank-line').textContent = 'Unranked';
+  }
+
+  // Card background (shop or crate)
+  const bgEl = document.getElementById('profile-card-bg');
+  if (bgEl) {
+    const cItem = CRATE_BY_ID[state.equipped.cardBg];
+    if (cItem && cItem.pcbg) {
+      bgEl.className = 'profile-card-bg ' + cItem.pcbg;
+    } else {
+      bgEl.className = 'profile-card-bg pcbg-' + (state.equipped.cardBg || 'default');
+    }
+  }
+
+  // Title select
+  const sel = document.getElementById('profile-title-select');
+  if (sel) {
+    const titles = state.titles || [];
+    sel.innerHTML = '<option value="">No title</option>' +
+      titles.map(t => `<option value="${t.replace(/"/g, '&quot;')}" ${state.equipped.title === t ? 'selected' : ''}>${t}</option>`).join('');
+    sel.onchange = () => {
+      state.equipped.title = sel.value;
+      saveState();
+      renderProfile();
+    };
+  }
+
+  // Card bg picker
+  const list = document.getElementById('profile-cardbg-list');
+  if (list) {
+    list.innerHTML = '';
+    CARD_BG_DEFS.forEach(c => {
+      const owned = (state.owned.cardBgs || []).includes(c.id);
+      const chip = document.createElement('div');
+      chip.className = 'cardbg-chip' + (state.equipped.cardBg === c.id ? ' selected' : '') + (!owned ? ' locked' : '');
+      chip.title = c.name + (c.animated ? ' (animated)' : '') + (owned ? '' : ' — buy in Shop');
+      chip.style.background = c.preview;
+      if (owned) {
+        chip.onclick = () => {
+          state.equipped.cardBg = c.id;
+          saveState();
+          renderProfile();
+        };
+      }
+      list.appendChild(chip);
+    });
+  }
+}
+
+function bindAvatarUpload() {
+  const input = document.getElementById('upload-avatar');
+  if (!input || input._bound) return;
+  input._bound = true;
+  input.addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    scaleImageToDataURL(file, 256, 256, dataUrl => {
+      state.profile.avatar = dataUrl;
+      saveState();
+      renderProfile();
+    });
+    input.value = '';
   });
 }
 
@@ -1340,19 +2678,190 @@ function showScreen(id) {
     clearInterval(infiniteScoreInterval);
     infiniteScoreInterval = null;
   }
+  // AFK farm only while AFK screen is open
+  if (id === 'afk-screen') startAfkFarm();
+  else stopAfkFarm();
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (id === 'select-screen') renderMapGrid();
   if (id === 'shop-screen') renderShop();
+  if (id === 'crates-screen') renderCratesScreen();
   if (id === 'custom-screen') renderCustomList();
   if (id === 'editor-screen') rebuildEditor();
   if (id === 'settings-screen') renderSettings();
   if (id === 'custom-skin-screen') updateCustomSkinPreviews();
   if (id === 'stats-screen') renderStats();
+  if (id === 'rank-screen') renderRankScreen();
+  if (id === 'profile-screen') renderProfile();
   if (id === 'main-menu') updateCoinDisplays();
+  // Hide floating rank badge during active play
+  const badge = document.getElementById('rank-badge');
+  if (badge) {
+    const hideOn = id === 'game-screen';
+    if (hideOn) badge.classList.add('hidden');
+    else updateRankBadge();
+  }
   // Restart refresh if results is shown again with a locked score
   if (id === 'results-screen' && lockedInfiniteScore > 0 && !infiniteScoreInterval) {
     startInfiniteScoreRefresh();
+  }
+}
+
+function applyHudSettings() {
+  const setVis = (id, on) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = on ? '' : 'none';
+  };
+  setVis('hud-score', state.showScoreHud);
+  setVis('hud-combo', state.showComboHud);
+  setVis('hud-acc', state.showAccHud);
+  const hints = document.querySelector('.key-hints');
+  if (hints) hints.style.display = state.showKeyHints ? '' : 'none';
+  const dim = document.getElementById('playfield-dim');
+  if (dim) dim.style.opacity = String(state.bgDim ?? 0.35);
+}
+
+/** Apply playfield layout to the real game playfield (not menus). */
+function applyPlayfieldLayout() {
+  const L = state.uiLayout || {};
+  const thick = L.laneThickness ?? 1;
+  const height = L.laneHeight ?? 1;
+  const recBottom = L.receptorBottom ?? 48;
+  const judTop = L.judgmentTopPct ?? 38;
+
+  document.documentElement.style.setProperty('--lane-thick', String(thick));
+  document.documentElement.style.setProperty('--pf-height-mult', String(height));
+
+  const wrap = document.getElementById('playfield-wrap');
+  if (wrap) {
+    wrap.style.height = `min(${75 * height}vh, ${640 * height}px)`;
+    wrap.style.minHeight = `${Math.round(400 * Math.min(1, height))}px`;
+  }
+
+  document.querySelectorAll('#playfield .receptor, #playfield .hit-flash').forEach(el => {
+    el.style.bottom = recBottom + 'px';
+  });
+  const jud = document.querySelector('#playfield .judgment-wrap');
+  if (jud) jud.style.top = judTop + '%';
+
+  // Scale note/receptor size via CSS vars derived from thickness
+  const baseNote = `calc(var(--lane-w) * ${0.82 * thick})`;
+  const baseRec = `calc(var(--lane-w) * ${0.94 * thick})`;
+  document.documentElement.style.setProperty('--note-size', baseNote);
+  document.documentElement.style.setProperty('--receptor-size', baseRec);
+
+  updateUiPreview();
+}
+
+function updateUiPreview() {
+  const L = state.uiLayout || {};
+  const thick = L.laneThickness ?? 1;
+  const recBottom = L.receptorBottom ?? 48;
+  const judTop = L.judgmentTopPct ?? 38;
+  const pf = document.getElementById('ui-preview-pf');
+  if (!pf) return;
+  const h = pf.clientHeight || 320;
+  // Map game bottom-px to preview (preview ~320px vs game ~500+)
+  const scale = h / 500;
+  const bottomPx = recBottom * scale;
+
+  document.querySelectorAll('.ui-prev-rec').forEach(el => {
+    el.style.bottom = bottomPx + 'px';
+    const size = Math.round(28 * thick);
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+  });
+  const jud = document.getElementById('ui-prev-judgment');
+  if (jud) jud.style.top = judTop + '%';
+  const note = document.getElementById('ui-prev-note');
+  if (note) {
+    const ns = Math.round(22 * thick);
+    note.style.width = ns + 'px';
+    note.style.height = ns + 'px';
+    note.style.bottom = (bottomPx + 80 * scale) + 'px';
+  }
+}
+
+let uiMoveMode = false;
+let uiDrag = null;
+
+function toggleUiMoveMode() {
+  uiMoveMode = !uiMoveMode;
+  const wrap = document.getElementById('ui-preview-wrap');
+  const btn = document.getElementById('ui-move-btn');
+  const hint = document.getElementById('ui-move-hint');
+  if (wrap) wrap.classList.toggle('move-mode', uiMoveMode);
+  if (btn) {
+    btn.textContent = uiMoveMode ? 'Move tool (ON)' : 'Move tool';
+    btn.style.borderColor = uiMoveMode ? 'var(--accent)' : '';
+  }
+  if (hint) hint.classList.toggle('hidden', !uiMoveMode);
+}
+
+function resetUiLayout() {
+  state.uiLayout = {
+    laneThickness: 1.0,
+    laneHeight: 1.0,
+    receptorBottom: 48,
+    judgmentTopPct: 38
+  };
+  saveState();
+  applyPlayfieldLayout();
+  renderSettings();
+}
+
+function bindUiPreviewDrag() {
+  const wrap = document.getElementById('ui-preview-wrap');
+  if (!wrap || wrap._dragBound) return;
+  wrap._dragBound = true;
+
+  const onDown = (e, kind) => {
+    if (!uiMoveMode) return;
+    e.preventDefault();
+    const pf = document.getElementById('ui-preview-pf');
+    const rect = pf.getBoundingClientRect();
+    uiDrag = { kind, rect };
+  };
+  document.querySelectorAll('.ui-prev-rec').forEach(el => {
+    el.addEventListener('pointerdown', e => onDown(e, 'receptor'));
+  });
+  const jud = document.getElementById('ui-prev-judgment');
+  if (jud) jud.addEventListener('pointerdown', e => onDown(e, 'judgment'));
+
+  window.addEventListener('pointermove', e => {
+    if (!uiDrag) return;
+    const y = e.clientY - uiDrag.rect.top;
+    const h = uiDrag.rect.height;
+    if (uiDrag.kind === 'receptor') {
+      const fromBottom = h - y;
+      const gameBottom = Math.round((fromBottom / h) * 500);
+      state.uiLayout.receptorBottom = Math.min(120, Math.max(20, gameBottom));
+    } else if (uiDrag.kind === 'judgment') {
+      state.uiLayout.judgmentTopPct = Math.min(70, Math.max(15, Math.round((y / h) * 100)));
+    }
+    updateUiPreview();
+    applyPlayfieldLayout();
+  });
+  window.addEventListener('pointerup', () => {
+    if (uiDrag) {
+      uiDrag = null;
+      saveState();
+    }
+  });
+}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.settings-tabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.stab === tab);
+  });
+  ['general', 'ui', 'keybinds'].forEach(t => {
+    const p = document.getElementById('settings-panel-' + t);
+    if (p) p.style.display = t === tab ? '' : 'none';
+  });
+  if (tab === 'ui') {
+    updateUiPreview();
+    bindUiPreviewDrag();
   }
 }
 
@@ -1368,24 +2877,105 @@ function renderSettings() {
       saveState();
     };
   }
-  const list = document.getElementById('keybind-list');
-  if (!list) return;
-  list.innerHTML = '';
-  ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'].forEach((label, i) => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:var(--panel);padding:10px 14px;border-radius:8px;';
-    const waiting = rebindingLane === i;
-    row.innerHTML = `
-      <span>${label}</span>
-      <button id="kb-${i}" style="${waiting ? 'border-color:var(--accent);background:#3a2a35;' : ''}">
-        ${waiting ? 'Press a key…' : keyCodeToLabel(state.keybinds[i])}
-      </button>`;
-    row.querySelector('button').onclick = () => {
-      rebindingLane = i;
-      renderSettings();
+
+  const dimSlider = document.getElementById('bg-dim-slider');
+  const dimVal = document.getElementById('bg-dim-val');
+  if (dimSlider) {
+    dimSlider.value = state.bgDim ?? 0.35;
+    dimVal.textContent = Math.round((state.bgDim ?? 0.35) * 100) + '%';
+    dimSlider.oninput = () => {
+      state.bgDim = parseFloat(dimSlider.value);
+      dimVal.textContent = Math.round(state.bgDim * 100) + '%';
+      applyHudSettings();
+      saveState();
     };
-    list.appendChild(row);
-  });
+  }
+
+  const judSlider = document.getElementById('jud-dur-slider');
+  const judVal = document.getElementById('jud-dur-val');
+  if (judSlider) {
+    judSlider.value = state.judgmentMs ?? 500;
+    judVal.textContent = (state.judgmentMs ?? 500) + 'ms';
+    judSlider.oninput = () => {
+      state.judgmentMs = parseInt(judSlider.value, 10);
+      judVal.textContent = state.judgmentMs + 'ms';
+      saveState();
+    };
+  }
+
+  const thick = document.getElementById('lane-thick-slider');
+  const thickVal = document.getElementById('lane-thick-val');
+  if (thick) {
+    thick.value = state.uiLayout.laneThickness ?? 1;
+    thickVal.textContent = (state.uiLayout.laneThickness ?? 1).toFixed(2) + 'x';
+    thick.oninput = () => {
+      state.uiLayout.laneThickness = parseFloat(thick.value);
+      thickVal.textContent = state.uiLayout.laneThickness.toFixed(2) + 'x';
+      applyPlayfieldLayout();
+      saveState();
+    };
+  }
+  const lh = document.getElementById('lane-height-slider');
+  const lhVal = document.getElementById('lane-height-val');
+  if (lh) {
+    lh.value = state.uiLayout.laneHeight ?? 1;
+    lhVal.textContent = (state.uiLayout.laneHeight ?? 1).toFixed(2) + 'x';
+    lh.oninput = () => {
+      state.uiLayout.laneHeight = parseFloat(lh.value);
+      lhVal.textContent = state.uiLayout.laneHeight.toFixed(2) + 'x';
+      applyPlayfieldLayout();
+      saveState();
+    };
+  }
+
+  const hudBox = document.getElementById('hud-settings');
+  if (hudBox) {
+    const toggles = [
+      ['showKeyHints', 'Show key hints under playfield'],
+      ['showJudgment', 'Show judgment text (PERFECT / GREAT / …)'],
+      ['showJudgmentCombo', 'Show combo under judgment'],
+      ['showScoreHud', 'Show score in HUD'],
+      ['showComboHud', 'Show combo in HUD'],
+      ['showAccHud', 'Show accuracy in HUD'],
+      ['hitFlash', 'Hit flash on receptors'],
+      ['countdownEnabled', '3-2-1 countdown before start']
+    ];
+    hudBox.innerHTML = '';
+    toggles.forEach(([key, label]) => {
+      const row = document.createElement('label');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);padding:10px 14px;border-radius:8px;cursor:pointer;';
+      row.innerHTML = `<span style="font-size:14px;">${label}</span><input type="checkbox" ${state[key] ? 'checked' : ''} style="width:18px;height:18px;accent-color:#ff66aa;">`;
+      row.querySelector('input').onchange = (e) => {
+        state[key] = e.target.checked;
+        applyHudSettings();
+        saveState();
+      };
+      hudBox.appendChild(row);
+    });
+  }
+
+  const list = document.getElementById('keybind-list');
+  if (list) {
+    list.innerHTML = '';
+    ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'].forEach((label, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:var(--panel);padding:10px 14px;border-radius:8px;';
+      const waiting = rebindingLane === i;
+      row.innerHTML = `
+        <span>${label}</span>
+        <button id="kb-${i}" style="${waiting ? 'border-color:var(--accent);background:#3a2a35;' : ''}">
+          ${waiting ? 'Press a key…' : keyCodeToLabel(state.keybinds[i])}
+        </button>`;
+      row.querySelector('button').onclick = () => {
+        rebindingLane = i;
+        renderSettings();
+      };
+      list.appendChild(row);
+    });
+  }
+
+  applyPlayfieldLayout();
+  bindUiPreviewDrag();
 }
 
 function resetKeybinds() {
@@ -1436,7 +3026,15 @@ function pickInfinitePattern(excludeId) {
   let pool = INFINITE_POOL;
   if (excludeId) pool = pool.filter(p => p.id !== excludeId);
   if (pool.length === 0) pool = INFINITE_POOL;
-  return pool[Math.floor(Math.random() * pool.length)];
+  // Chords stay in the pool but are less likely (many chord maps would otherwise dominate)
+  const weightOf = (p) => (p.type === 'chords' ? 0.28 : 1);
+  const total = pool.reduce((s, p) => s + weightOf(p), 0);
+  let r = Math.random() * total;
+  for (const p of pool) {
+    r -= weightOf(p);
+    if (r <= 0) return p;
+  }
+  return pool[pool.length - 1];
 }
 
 function startInfiniteMode() {
@@ -1557,6 +3155,20 @@ function startGame(customNotes = null, customName = null) {
 /** 3-2-1-GO countdown, then start the chart */
 function beginCountdownAndStart() {
   const el = document.getElementById('countdown');
+  applyHudSettings();
+  applyPlayfieldLayout();
+
+  if (!state.countdownEnabled) {
+    if (el) {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+    game.startTime = performance.now();
+    game.running = true;
+    gameLoop();
+    return;
+  }
+
   const steps = ['3', '2', '1', 'GO'];
   let i = 0;
   if (el) {
@@ -1665,6 +3277,7 @@ function spawnNote(n) {
   const el = document.createElement('div');
   el.className = 'note';
   const useCustom = state.owned.customSkin && state.equipped.useCustom && state.customImages.note;
+  const crateSkin = CRATE_BY_ID[state.equipped.skin];
 
   if (useCustom) {
     el.classList.add('custom-img');
@@ -1673,22 +3286,40 @@ function spawnNote(n) {
     el.style.backgroundPosition = 'center';
     el.style.backgroundRepeat = 'no-repeat';
     el.style.backgroundColor = 'transparent';
+  } else if (crateSkin && crateSkin.type === 'skins') {
+    if (crateSkin.chroma) {
+      el.style.background = 'linear-gradient(90deg,#ff004c,#ffee00,#00e676,#00b0ff,#d500f9)';
+      el.style.backgroundSize = '200% 100%';
+      el.style.animation = 'card-shift 2s linear infinite';
+    } else {
+      el.style.background = crateSkin.color || '#fff';
+    }
   } else {
     if (state.equipped.skin && state.equipped.skin !== 'default') {
       el.classList.add('skin-' + state.equipped.skin);
     }
   }
   // shape still applies (clips / sizing) unless custom fills the box
-  const shape = state.equipped.shape || 'circle';
-  if (shape && shape !== 'circle') {
-    el.classList.add('shape-' + shape);
+  const crateShape = CRATE_BY_ID[state.equipped.shape];
+  if (crateShape && crateShape.shapeClass) {
+    el.classList.add(crateShape.shapeClass);
+  } else {
+    const shape = state.equipped.shape || 'circle';
+    if (shape && shape !== 'circle' && !shape.startsWith('cshape_')) {
+      el.classList.add('shape-' + shape);
+    }
   }
   el.style.left = ((n.lane + 0.5) * 25) + '%';
 
-  if (state.equipped.trail && state.equipped.trail !== 'none') {
+  const crateTrail = CRATE_BY_ID[state.equipped.trail];
+  const trailMode = crateTrail ? crateTrail.trail : state.equipped.trail;
+  if (trailMode && trailMode !== 'none') {
     el.classList.add('has-trail');
     const trail = document.createElement('div');
     trail.className = 'trail';
+    if (crateTrail && crateTrail.chroma) {
+      trail.style.background = 'linear-gradient(to top, #ff66cc, transparent)';
+    }
     el.appendChild(trail);
   }
   el.dataset.time = n.time;
@@ -1754,6 +3385,7 @@ function handleKey(lane, down) {
 }
 
 function flashReceptor(lane, jud) {
+  if (!state.hitFlash) return;
   const flash = document.querySelector(`.hit-flash[data-lane="${lane}"]`);
   if (!flash) return;
   const colors = { perfect: '#ffee88', great: '#88ff88', good: '#88aaff', miss: '#ff5555' };
@@ -1765,10 +3397,21 @@ function flashReceptor(lane, jud) {
 function showJudgment(type) {
   const el = document.getElementById('judgment');
   const comboEl = document.getElementById('judgment-combo');
+  if (!state.showJudgment) {
+    if (el) {
+      el.textContent = '';
+      el.className = 'judgment';
+    }
+    if (comboEl) {
+      comboEl.textContent = '';
+      comboEl.classList.remove('show');
+    }
+    return;
+  }
   el.textContent = type.toUpperCase();
   el.className = 'judgment show ' + type;
   if (comboEl) {
-    if (type === 'miss' || !game || game.combo <= 0) {
+    if (!state.showJudgmentCombo || type === 'miss' || !game || game.combo <= 0) {
       comboEl.textContent = '';
       comboEl.classList.remove('show');
     } else {
@@ -1777,10 +3420,11 @@ function showJudgment(type) {
     }
   }
   clearTimeout(el._t);
+  const dur = state.judgmentMs || 500;
   el._t = setTimeout(() => {
     el.classList.remove('show');
     if (comboEl) comboEl.classList.remove('show');
-  }, 500);
+  }, dur);
 }
 
 function updateAcc() {
@@ -1826,9 +3470,17 @@ function endGame() {
   }
 
   // coins: normal = acc * notes; infinite = hits based
-  const coinsEarned = game.infinite
-    ? Math.floor((game.hits || 0) * 1.5 + game.perfect * 0.3)
-    : Math.floor(acc / 100 * game.totalNotes * 0.8 + game.perfect * 0.5);
+  // BPM multiplier (120 = base 1.0x)
+  const bpm = game.bpm || 120;
+  let bpmMult = 1.0;
+  if (bpm >= 200) bpmMult = 1.6;
+  else if (bpm >= 180) bpmMult = 1.45;
+  else if (bpm >= 160) bpmMult = 1.3;
+  else if (bpm >= 140) bpmMult = 1.15;
+  const coinsBase = game.infinite
+    ? ((game.hits || 0) * 1.5 + game.perfect * 0.3)
+    : (acc / 100 * game.totalNotes * 0.8 + game.perfect * 0.5);
+  const coinsEarned = Math.floor(coinsBase * bpmMult);
   state.coins += coinsEarned;
   if (!game.infinite && acc > state.bestAcc) state.bestAcc = acc;
 
@@ -1855,6 +3507,18 @@ function endGame() {
     const elapsed = Math.max(0, performance.now() - game.startTime);
     st.playTimeMs += elapsed;
   }
+
+  // Season XP (max 50 total) — small gains per finished run
+  let xpGain = 0;
+  if (game.infinite) {
+    xpGain = Math.min(3, 1 + Math.floor((game.hits || 0) / 80));
+  } else {
+    xpGain = 1;
+    if (acc >= 90) xpGain++;
+    if (acc >= 95 && game.miss === 0) xpGain++;
+  }
+  grantSeasonXP(xpGain);
+
   saveState();
 
   document.getElementById('grade').textContent = grade;
@@ -2120,6 +3784,397 @@ document.getElementById('map-upload').addEventListener('change', e => {
 });
 
 // ===================== SHOP =====================
+// ===================== CRATES =====================
+const CRATE_PRICE = 5000;
+const RARITY_WEIGHTS = [
+  { rarity: 'common', w: 50 },
+  { rarity: 'rare', w: 30 },
+  { rarity: 'epic', w: 15 },
+  { rarity: 'legendary', w: 4.5 },
+  { rarity: 'omnipotent', w: 0.5 }
+];
+const CRATE_TYPES = ['skins', 'shapes', 'trails', 'bgs', 'cardBgs', 'fonts'];
+const CRATE_TYPE_LABELS = {
+  skins: 'Note Colors',
+  shapes: 'Note Shapes',
+  trails: 'Trails',
+  bgs: 'Playfield BGs',
+  cardBgs: 'Profile Cards',
+  fonts: 'Fonts'
+};
+
+/** Build exclusive crate pool: 4C + 3R + 2E + 1L + 1O per type */
+function buildCratePool() {
+  const pool = [];
+  const add = (type, rarity, id, name, extra) => {
+    pool.push({ type, rarity, id, name, ...extra });
+  };
+  // Note colors (skins)
+  const skinC = [
+    ['cskin_ash', 'Ash Gray', '#9e9e9e'], ['cskin_slate', 'Slate', '#607d8b'],
+    ['cskin_blush', 'Soft Blush', '#f8bbd0'], ['cskin_mint', 'Pale Mint', '#b2dfdb']
+  ];
+  const skinR = [
+    ['cskin_cobalt', 'Cobalt Burst', '#2979ff'], ['cskin_jade', 'Jade Spark', '#00c853'],
+    ['cskin_amber', 'Amber Core', '#ff6d00']
+  ];
+  const skinE = [
+    ['cskin_violet', 'Void Violet', '#aa00ff'], ['cskin_rose', 'Rose Nova', '#ff1744']
+  ];
+  skinC.forEach(([id, n, c]) => add('skins', 'common', id, n, { color: c }));
+  skinR.forEach(([id, n, c]) => add('skins', 'rare', id, n, { color: c }));
+  skinE.forEach(([id, n, c]) => add('skins', 'epic', id, n, { color: c }));
+  add('skins', 'legendary', 'cskin_solar', 'Solar Flare', { color: '#ffea00' });
+  add('skins', 'omnipotent', 'cskin_chroma', 'Chroma Note', { color: '#ff00aa', chroma: true });
+
+  // Shapes
+  [['cshape_pill', 'Pill'], ['cshape_soft', 'Soft Square'], ['cshape_ring', 'Ring'], ['cshape_teardrop', 'Teardrop']].forEach(([id, n]) =>
+    add('shapes', 'common', id, n, { shapeClass: 'shape-rect' }));
+  [['cshape_gem', 'Gem Cut'], ['cshape_blade', 'Blade'], ['cshape_hexcut', 'Hex Cut']].forEach(([id, n]) =>
+    add('shapes', 'rare', id, n, { shapeClass: id === 'cshape_gem' ? 'shape-diamond' : id === 'cshape_blade' ? 'shape-arrow' : 'shape-hex' }));
+  [['cshape_prism', 'Prism Form'], ['cshape_star', 'Star Notch']].forEach(([id, n]) =>
+    add('shapes', 'epic', id, n, { shapeClass: 'shape-diamond' }));
+  add('shapes', 'legendary', 'cshape_crystal', 'Crystal Form', { shapeClass: 'shape-hex' });
+  add('shapes', 'omnipotent', 'cshape_shift', 'Shifting Form', { shapeClass: 'shape-hex', chroma: true });
+
+  // Trails
+  [['ctrail_dust', 'Dust Trail'], ['ctrail_thin', 'Thin Line'], ['ctrail_soft', 'Soft Fade'], ['ctrail_dot', 'Dot Stream']].forEach(([id, n]) =>
+    add('trails', 'common', id, n, { trail: 'basic' }));
+  [['ctrail_neon', 'Neon Wake'], ['ctrail_ice', 'Ice Streak'], ['ctrail_ember', 'Ember Path']].forEach(([id, n]) =>
+    add('trails', 'rare', id, n, { trail: 'basic' }));
+  [['ctrail_plasma', 'Plasma Ribbon'], ['ctrail_shadow', 'Shadow Length']].forEach(([id, n]) =>
+    add('trails', 'epic', id, n, { trail: 'long' }));
+  add('trails', 'legendary', 'ctrail_comet', 'Comet Tail', { trail: 'long' });
+  add('trails', 'omnipotent', 'ctrail_chroma', 'Chroma Wake', { trail: 'long', chroma: true });
+
+  // Playfield backgrounds
+  [['cbg_smog', 'Smog'], ['cbg_dusk', 'Dusk Plain'], ['cbg_fog', 'Fog Layer'], ['cbg_coal', 'Coal Pit']].forEach(([id, n]) =>
+    add('bgs', 'common', id, n, { css: 'cbg-dim' }));
+  [['cbg_aurora2', 'Crate Aurora'], ['cbg_abyss', 'Abyss'], ['cbg_pulse', 'Pulse Field']].forEach(([id, n]) =>
+    add('bgs', 'rare', id, n, { css: 'cbg-glow' }));
+  [['cbg_nova', 'Nova Field'], ['cbg_rift', 'Rift']].forEach(([id, n]) =>
+    add('bgs', 'epic', id, n, { css: 'cbg-rift' }));
+  add('bgs', 'legendary', 'cbg_eclipse', 'Eclipse', { css: 'cbg-eclipse' });
+  add('bgs', 'omnipotent', 'cbg_omni', 'Omni Field', { css: 'cbg-omni', chroma: true });
+
+  // Profile card backgrounds
+  [['ccard_plain', 'Plain Steel'], ['ccard_ink', 'Ink Wash'], ['ccard_sand', 'Sandstone'], ['ccard_moss', 'Moss']].forEach(([id, n]) =>
+    add('cardBgs', 'common', id, n, { pcbg: 'pcbg-midnight' }));
+  [['ccard_wave', 'Wave Card'], ['ccard_flare', 'Flare Card'], ['ccard_frost', 'Frost Card']].forEach(([id, n]) =>
+    add('cardBgs', 'rare', id, n, { pcbg: 'pcbg-ember' }));
+  [['ccard_torrent', 'Torrent'], ['ccard_nebula2', 'Card Nebula']].forEach(([id, n]) =>
+    add('cardBgs', 'epic', id, n, { pcbg: 'pcbg-aurora' }));
+  add('cardBgs', 'legendary', 'ccard_royal', 'Royal Card', { pcbg: 'pcbg-goldpulse' });
+  add('cardBgs', 'omnipotent', 'ccard_omni', 'Omni Card', { pcbg: 'pcbg-prism', chroma: true });
+
+  // Fonts (crate-exclusive families)
+  [['cfont_nunito', 'Nunito', 'Nunito:wght@400;700', "'Nunito', system-ui, sans-serif"],
+   ['cfont_lato', 'Lato', 'Lato:wght@400;700', "'Lato', system-ui, sans-serif"],
+   ['cfont_oswald', 'Oswald', 'Oswald:wght@500;700', "'Oswald', system-ui, sans-serif"],
+   ['cfont_rubik', 'Rubik', 'Rubik:wght@400;700', "'Rubik', system-ui, sans-serif"]].forEach(([id, n, g, f]) =>
+    add('fonts', 'common', id, n, { google: g, family: f }));
+  [['cfont_exo', 'Exo 2', 'Exo+2:wght@500;700', "'Exo 2', system-ui, sans-serif"],
+   ['cfont_sora', 'Sora', 'Sora:wght@400;700', "'Sora', system-ui, sans-serif"],
+   ['cfont_outfit', 'Outfit', 'Outfit:wght@500;700', "'Outfit', system-ui, sans-serif"]].forEach(([id, n, g, f]) =>
+    add('fonts', 'rare', id, n, { google: g, family: f }));
+  [['cfont_audiowide', 'Audiowide', 'Audiowide', "'Audiowide', system-ui, sans-serif"],
+   ['cfont_righteous', 'Righteous', 'Righteous', "'Righteous', system-ui, sans-serif"]].forEach(([id, n, g, f]) =>
+    add('fonts', 'epic', id, n, { google: g, family: f }));
+  add('fonts', 'legendary', 'cfont_bangers', 'Bangers', { google: 'Bangers', family: "'Bangers', system-ui, sans-serif" });
+  add('fonts', 'omnipotent', 'cfont_omni', 'Omni Type', { google: 'Orbitron:wght@700', family: "'Orbitron', system-ui, sans-serif", chroma: true });
+
+  return pool;
+}
+const CRATE_POOL = buildCratePool();
+const CRATE_BY_ID = Object.fromEntries(CRATE_POOL.map(i => [i.id, i]));
+
+let crateRollBusy = false;
+let crateRollWon = null;
+let crateInvTab = 'skins';
+
+function pickWeightedRarity() {
+  const r = Math.random() * 100;
+  let acc = 0;
+  for (const { rarity, w } of RARITY_WEIGHTS) {
+    acc += w;
+    if (r < acc) return rarity;
+  }
+  return 'common';
+}
+
+function pickCrateItemByRarity(rarity) {
+  const list = CRATE_POOL.filter(i => i.rarity === rarity);
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function switchCrateTab(tab) {
+  document.querySelectorAll('.crate-tabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.ctab === tab);
+  });
+  document.querySelectorAll('.crate-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('crate-panel-' + tab);
+  if (panel) panel.classList.add('active');
+  if (tab === 'owned') renderOwnedCrates();
+  if (tab === 'inv') renderCrateInventory();
+  if (tab === 'buy') updateCrateCounts();
+}
+
+function updateCrateCounts() {
+  const n = state.crates || 0;
+  const a = document.getElementById('crate-count-label');
+  const b = document.getElementById('crate-owned-inline');
+  if (a) a.textContent = n;
+  if (b) b.textContent = n;
+}
+
+function buyCrate() {
+  if (state.coins < CRATE_PRICE) {
+    alert('Not enough coins! Need ' + CRATE_PRICE.toLocaleString() + '.');
+    return;
+  }
+  state.coins -= CRATE_PRICE;
+  state.crates = (state.crates || 0) + 1;
+  saveState();
+  updateCoinDisplays();
+  updateCrateCounts();
+  alert('Crate purchased! Open it from My Crates when ready.');
+}
+
+function renderOwnedCrates() {
+  updateCrateCounts();
+  const list = document.getElementById('owned-crates-list');
+  const opener = document.getElementById('crate-opener');
+  if (!list) return;
+  list.innerHTML = '';
+  const n = state.crates || 0;
+  if (n <= 0) {
+    list.innerHTML = '<p style="color:#666;">No unopened crates. Buy some from the Buy tab.</p>';
+    if (opener) opener.classList.add('hidden');
+    return;
+  }
+  for (let i = 0; i < Math.min(n, 24); i++) {
+    const div = document.createElement('div');
+    div.className = 'owned-crate';
+    div.innerHTML = `<div class="crate-art">📦</div><div style="font-size:13px;margin:4px 0;">Crate</div>
+      <button class="primary" style="font-size:13px;padding:6px 10px;" onclick="prepareCrateOpen()">Open</button>`;
+    list.appendChild(div);
+  }
+  if (n > 24) {
+    const more = document.createElement('p');
+    more.style.cssText = 'color:#888;width:100%;';
+    more.textContent = '+ ' + (n - 24) + ' more crates';
+    list.appendChild(more);
+  }
+}
+
+function prepareCrateOpen() {
+  if (crateRollBusy || (state.crates || 0) < 1) return;
+  const opener = document.getElementById('crate-opener');
+  if (opener) opener.classList.remove('hidden');
+  document.getElementById('crate-result').textContent = '';
+  document.getElementById('crate-open-btn').classList.remove('hidden');
+  document.getElementById('crate-open-btn').disabled = false;
+  document.getElementById('crate-done-btn').classList.add('hidden');
+  document.getElementById('crate-roll-track').innerHTML = '';
+  document.getElementById('crate-roll-track').style.transition = 'none';
+  document.getElementById('crate-roll-track').style.transform = 'translateX(0)';
+  opener.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function startCrateRoll() {
+  if (crateRollBusy || (state.crates || 0) < 1) return;
+  crateRollBusy = true;
+  state.crates -= 1;
+  saveState();
+  updateCrateCounts();
+  document.getElementById('crate-open-btn').disabled = true;
+
+  // Build 100 weighted random items; winner is index 80 (81st)
+  const strip = [];
+  for (let i = 0; i < 100; i++) {
+    strip.push(pickCrateItemByRarity(pickWeightedRarity()));
+  }
+  crateRollWon = strip[80];
+
+  const track = document.getElementById('crate-roll-track');
+  const wrap = track.parentElement;
+  track.innerHTML = '';
+  track.style.transition = 'none';
+  track.style.transform = 'translateX(0)';
+
+  strip.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'crate-roll-item r-' + item.rarity;
+    let prev = '';
+    if (item.type === 'skins') {
+      prev = `<div class="ri-preview" style="background:${item.color || '#fff'};border-radius:50%;"></div>`;
+    } else if (item.type === 'cardBgs' || item.type === 'bgs') {
+      prev = `<div class="ri-preview" style="background:linear-gradient(135deg,#333,#555);"></div>`;
+    } else {
+      prev = `<div class="ri-preview" style="background:#2a2a40;display:flex;align-items:center;justify-content:center;font-size:18px;">?</div>`;
+    }
+    el.innerHTML = prev + `<div>${item.name}</div><div class="rarity-tag rarity-${item.rarity}">${item.rarity}</div>`;
+    track.appendChild(el);
+  });
+
+  // Item width 100 + margin 12 = 112
+  const itemSpan = 112;
+  const wrapW = wrap.clientWidth;
+  // Align center of item 80 to center of wrap
+  const targetX = wrapW / 2 - (80 * itemSpan + 50 + 6);
+  // Slight random jitter within item so it doesn't always look identical
+  const jitter = (Math.random() - 0.5) * 30;
+  const finalX = targetX + jitter;
+
+  requestAnimationFrame(() => {
+    track.style.transition = 'transform 6.5s cubic-bezier(0.12, 0.75, 0.08, 1)';
+    track.style.transform = `translateX(${finalX}px)`;
+  });
+
+  setTimeout(() => {
+    grantCrateItem(crateRollWon);
+    const res = document.getElementById('crate-result');
+    res.innerHTML = `You won: <span class="rarity-${crateRollWon.rarity}">${crateRollWon.name}</span> <span style="color:#888;font-size:14px;">(${crateRollWon.rarity} · ${CRATE_TYPE_LABELS[crateRollWon.type]})</span>`;
+    document.getElementById('crate-done-btn').classList.remove('hidden');
+    document.getElementById('crate-open-btn').classList.add('hidden');
+    crateRollBusy = false;
+    renderOwnedCrates();
+  }, 6600);
+}
+
+const CRATE_SELL_PRICES = {
+  common: 500,
+  rare: 1000,
+  epic: 2000,
+  legendary: 5000,
+  omnipotent: 20000
+};
+
+/** Migrate array-style inv → count maps */
+function normalizeCrateInv(raw) {
+  const out = { skins: {}, shapes: {}, trails: {}, bgs: {}, cardBgs: {}, fonts: {} };
+  CRATE_TYPES.forEach(t => {
+    const v = raw[t];
+    if (!v) return;
+    if (Array.isArray(v)) {
+      v.forEach(id => {
+        out[t][id] = (out[t][id] || 0) + 1;
+      });
+    } else if (typeof v === 'object') {
+      Object.keys(v).forEach(id => {
+        const n = parseInt(v[id], 10);
+        if (n > 0) out[t][id] = n;
+      });
+    }
+  });
+  return out;
+}
+
+function grantCrateItem(item) {
+  if (!item) return;
+  const key = item.type;
+  if (!state.crateInv[key] || Array.isArray(state.crateInv[key])) {
+    state.crateInv = normalizeCrateInv(state.crateInv);
+  }
+  if (!state.crateInv[key]) state.crateInv[key] = {};
+  state.crateInv[key][item.id] = (state.crateInv[key][item.id] || 0) + 1;
+  // Also allow equip via owned lists for equip pipeline
+  if (key === 'skins' && !state.owned.skins.includes(item.id)) state.owned.skins.push(item.id);
+  if (key === 'shapes' && !state.owned.shapes.includes(item.id)) state.owned.shapes.push(item.id);
+  if (key === 'trails' && !state.owned.trails.includes(item.id)) state.owned.trails.push(item.id);
+  if (key === 'bgs' && !state.owned.bgs.includes(item.id)) state.owned.bgs.push(item.id);
+  if (key === 'cardBgs' && !state.owned.cardBgs.includes(item.id)) state.owned.cardBgs.push(item.id);
+  if (key === 'fonts' && !state.owned.fonts.includes(item.id)) state.owned.fonts.push(item.id);
+  saveState();
+}
+
+function sellCrateItem(type, id) {
+  if (!state.crateInv[type] || Array.isArray(state.crateInv[type])) {
+    state.crateInv = normalizeCrateInv(state.crateInv);
+  }
+  const count = state.crateInv[type][id] || 0;
+  if (count < 2) {
+    alert('You need more than one of this item to sell a duplicate.');
+    return;
+  }
+  const item = CRATE_BY_ID[id];
+  if (!item) return;
+  const price = CRATE_SELL_PRICES[item.rarity] || 500;
+  state.crateInv[type][id] = count - 1;
+  state.coins += price;
+  saveState();
+  updateCoinDisplays();
+  renderCrateInventory();
+}
+
+function finishCrateRoll() {
+  document.getElementById('crate-opener').classList.add('hidden');
+  crateRollWon = null;
+  renderOwnedCrates();
+}
+
+function renderCrateInventory() {
+  const tabs = document.getElementById('inv-type-tabs');
+  const grid = document.getElementById('inv-grid');
+  if (!tabs || !grid) return;
+  if (Array.isArray(state.crateInv[crateInvTab])) {
+    state.crateInv = normalizeCrateInv(state.crateInv);
+  }
+  tabs.innerHTML = '';
+  CRATE_TYPES.forEach(t => {
+    const btn = document.createElement('button');
+    btn.textContent = CRATE_TYPE_LABELS[t];
+    btn.className = crateInvTab === t ? 'active' : '';
+    btn.onclick = () => { crateInvTab = t; renderCrateInventory(); };
+    tabs.appendChild(btn);
+  });
+  grid.innerHTML = '';
+  const bag = state.crateInv[crateInvTab] || {};
+  const ids = Object.keys(bag).filter(id => (bag[id] || 0) > 0);
+  if (ids.length === 0) {
+    grid.innerHTML = '<p style="color:#666;">No items of this type yet. Open crates to collect exclusive cosmetics.</p>';
+    return;
+  }
+  ids.forEach(id => {
+    const item = CRATE_BY_ID[id];
+    if (!item) return;
+    const count = bag[id] || 0;
+    const equipKey = crateInvTab === 'skins' ? 'skin' : crateInvTab === 'shapes' ? 'shape' : crateInvTab === 'trails' ? 'trail' : crateInvTab === 'bgs' ? 'bg' : crateInvTab === 'cardBgs' ? 'cardBg' : 'font';
+    const equipped = state.equipped[equipKey] === id;
+    const sellPrice = CRATE_SELL_PRICES[item.rarity] || 500;
+    const div = document.createElement('div');
+    div.className = 'inv-item r-' + item.rarity;
+    let prev = '';
+    if (item.color) prev = `<div style="width:28px;height:28px;border-radius:50%;background:${item.color};margin:0 auto 6px;"></div>`;
+    div.innerHTML = `
+      <div class="rarity-tag rarity-${item.rarity}">${item.rarity}</div>
+      ${prev}
+      <div style="font-weight:600;font-size:13px;margin-bottom:2px;">${item.name}</div>
+      <div style="color:#888;font-size:12px;margin-bottom:6px;">×${count}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="equip-btn" ${equipped ? 'disabled' : ''}>${equipped ? 'Equipped' : 'Equip'}</button>
+        ${count > 1 ? `<button class="sell-btn" style="font-size:12px;">Sell 1 (+${sellPrice})</button>` : ''}
+      </div>`;
+    div.querySelector('.equip-btn').onclick = () => {
+      state.equipped[equipKey] = id;
+      if (equipKey === 'font') applyFont();
+      else applyEquipped();
+      saveState();
+      renderCrateInventory();
+    };
+    const sellBtn = div.querySelector('.sell-btn');
+    if (sellBtn) {
+      sellBtn.onclick = () => sellCrateItem(crateInvTab, id);
+    }
+    grid.appendChild(div);
+  });
+}
+
+function renderCratesScreen() {
+  updateCrateCounts();
+  switchCrateTab(document.querySelector('.crate-tabs button.active')?.dataset.ctab || 'buy');
+}
+
 const SHOP = {
   skins: [
     { id: 'default', name: 'Pure White', price: 0, preview: '#ffffff' },
@@ -2212,6 +4267,73 @@ function renderShop() {
   renderSection('shop-shapes', SHOP.shapes, 'shapes');
   renderSection('shop-trails', SHOP.trails, 'trails');
   renderSection('shop-bgs', SHOP.bgs, 'bgs');
+
+  // Profile card backgrounds
+  const cardEl = document.getElementById('shop-cardbgs');
+  if (cardEl) {
+    cardEl.innerHTML = '';
+    CARD_BG_DEFS.forEach(item => {
+      const owned = (state.owned.cardBgs || []).includes(item.id);
+      const equipped = state.equipped.cardBg === item.id;
+      const div = document.createElement('div');
+      div.className = 'shop-item' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+      div.innerHTML = `
+        <h4>${item.name}${item.animated ? ' ✨' : ''}</h4>
+        <div class="preview" style="background:${item.preview};height:36px;border-radius:6px;"></div>
+        <div class="price">${item.price === 0 ? 'Free' : item.price + ' coins'}</div>
+        <button ${owned && equipped ? 'disabled' : ''}>${equipped ? 'Equipped' : owned ? 'Equip' : 'Buy'}</button>`;
+      div.querySelector('button').onclick = () => {
+        if (owned) {
+          state.equipped.cardBg = item.id;
+          saveState();
+          renderShop();
+        } else if (state.coins >= item.price) {
+          state.coins -= item.price;
+          if (!state.owned.cardBgs) state.owned.cardBgs = ['default'];
+          state.owned.cardBgs.push(item.id);
+          saveState();
+          updateCoinDisplays();
+          renderShop();
+        } else alert('Not enough coins!');
+      };
+      cardEl.appendChild(div);
+    });
+  }
+
+  // Site fonts (NOT part of custom texture pack)
+  const fontEl = document.getElementById('shop-fonts');
+  if (fontEl) {
+    fontEl.innerHTML = '';
+    Object.keys(FONT_DEFS).forEach(id => {
+      const item = FONT_DEFS[id];
+      const owned = (state.owned.fonts || []).includes(id);
+      const equipped = state.equipped.font === id;
+      const div = document.createElement('div');
+      div.className = 'shop-item' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+      div.innerHTML = `
+        <h4 style="font-family:${item.family}">${item.name}</h4>
+        <div class="preview" style="font-family:${item.family};font-size:15px;">Aa Bb Cc</div>
+        <div class="price">${item.price === 0 ? 'Free' : item.price + ' coins'}</div>
+        <button ${owned && equipped ? 'disabled' : ''}>${equipped ? 'Equipped' : owned ? 'Equip' : 'Buy'}</button>`;
+      if (item.google) ensureGoogleFont(item.google);
+      div.querySelector('button').onclick = () => {
+        if (owned) {
+          state.equipped.font = id;
+          applyFont();
+          saveState();
+          renderShop();
+        } else if (state.coins >= item.price) {
+          state.coins -= item.price;
+          if (!state.owned.fonts) state.owned.fonts = ['default'];
+          state.owned.fonts.push(id);
+          saveState();
+          updateCoinDisplays();
+          renderShop();
+        } else alert('Not enough coins!');
+      };
+      fontEl.appendChild(div);
+    });
+  }
 
   // Custom skin unlock (5000 coins) — equippable / unequippable
   const customEl = document.getElementById('shop-custom');
@@ -2309,14 +4431,18 @@ function bindCustomUploads() {
   // notes/hitzones: small (fits lane hitbox). bg: larger but still compressed
   bind('upload-note', 'note', 128, 128);
   bind('upload-hitzone', 'hitzone', 160, 160);
-  bind('upload-bg', 'bg', 1280, 720);
+  // Higher res + quality so backgrounds stay sharp on large screens
+  bind('upload-bg', 'bg', 1920, 1080);
 }
 
 // ===================== INIT =====================
 loadState();
 renderMapGrid();
 updateKeyHints();
+applyHudSettings();
+applyFont();
 bindCustomUploads();
+bindAvatarUpload();
 
 // always persist on leave / hide
 window.addEventListener('beforeunload', saveState);
