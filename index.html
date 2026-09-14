@@ -3,414 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>789</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
-        
-        :root {
-            --neon-red: #ff0033;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            min-height: 100vh;
-            color: #fff;
-            font-family: 'Orbitron', sans-serif;
-            overflow-x: hidden;
-            position: relative;
-            background: #0a0a0a;
-        }
+	<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Expires" content="0">
+	<link rel="stylesheet" href="style.css">
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+		}
+	</style>
 
-        #background-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.92;
-        }
-
-        .header {
-            text-align: center;
-            padding: 120px 20px 80px;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .title {
-            font-size: 5.2rem;
-            font-weight: 700;
-            letter-spacing: 12px;
-            position: relative;
-            display: inline-block;
-            color: #fff;
-            text-shadow: 
-                0 0 10px #fff,
-                0 0 20px #fff,
-                0 0 40px var(--neon-red);
-            animation: 
-                revealLine 2.8s ease-out forwards,
-                rainbowPulse 3.8s ease-in-out 3s forwards,
-                settleRed 0.8s 6.8s forwards;
-        }
-
-        /* 1. Start as thin glowing line */
-        @keyframes revealLine {
-            0% {
-                letter-spacing: 60px;
-                opacity: 0.3;
-                text-shadow: 0 0 30px #ff3366;
-                filter: blur(8px);
-            }
-            100% {
-                letter-spacing: 12px;
-                opacity: 1;
-                text-shadow: 
-                    0 0 10px #fff,
-                    0 0 20px #fff,
-                    0 0 40px var(--neon-red);
-                filter: blur(0);
-            }
-        }
-
-        /* 2. Continuous smooth rainbow/chroma pulse */
-        @keyframes rainbowPulse {
-            0%   { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
-            12%  { text-shadow: 0 0 20px #ff8800, 0 0 40px #ff8800; }
-            25%  { text-shadow: 0 0 20px #ffff00, 0 0 40px #ffff00; }
-            37%  { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
-            50%  { text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff; }
-            62%  { text-shadow: 0 0 20px #0066ff, 0 0 40px #0066ff; }
-            75%  { text-shadow: 0 0 20px #cc00ff, 0 0 40px #cc00ff; }
-            88%  { text-shadow: 0 0 20px #ff0088, 0 0 40px #ff0088; }
-            100% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
-        }
-
-        /* 3. Settle into final neon red */
-        @keyframes settleRed {
-            to {
-                text-shadow: 
-                    0 0 10px var(--neon-red),
-                    0 0 25px var(--neon-red),
-                    0 0 50px var(--neon-red),
-                    0 0 80px var(--neon-red);
-            }
-        }
-
-        .header p {
-            font-size: 1.4rem;
-            margin-top: 20px;
-            opacity: 0.85;
-            text-shadow: 0 0 15px var(--neon-red);
-        }
-        
-        .nav-container {
-            display: flex;
-            justify-content: center;
-            gap: 60px;
-            flex-wrap: wrap;
-            padding: 0 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .category-btn {
-            position: relative;
-            padding: 35px 80px;
-            font-size: 2.2rem;
-            font-weight: 700;
-            letter-spacing: 6px;
-            background: rgba(34, 0, 0, 0.55);
-            color: #fff;
-            border: 4px solid var(--neon-red);
-            border-radius: 16px;
-            box-shadow: 0 0 12px var(--neon-red), 0 0 22px var(--neon-red);
-            text-shadow: 0 0 10px var(--neon-red);
-            cursor: pointer;
-            transition: all 0.4s ease;
-            overflow: hidden;
-            text-decoration: none;
-            display: inline-block;
-            min-width: 320px;
-            text-align: center;
-        }
-        
-        .category-btn:hover {
-            transform: translateY(-6px) scale(1.04);
-            box-shadow: 0 0 20px var(--neon-red), 0 0 35px var(--neon-red);
-            background: rgba(34, 0, 0, 0.75);
-        }
-        
-        .category-btn::after {
-            content: ' →';
-            margin-left: 15px;
-            font-size: 1.6rem;
-            transition: transform 0.3s ease;
-        }
-        
-        .category-btn:hover::after {
-            transform: translateX(8px);
-        }
-        
-        .category-btn canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 1;
-            pointer-events: none;
-            border-radius: 11px;
-        }
-        
-        .category-btn .content {
-            position: relative;
-            z-index: 10;
-            pointer-events: none;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 80px 20px 40px;
-            font-size: 1.1rem;
-            opacity: 0.7;
-            text-shadow: 0 0 10px var(--neon-red);
-            position: relative;
-            z-index: 10;
-        }
-        
-        @media (max-width: 900px) {
-            .header h1 { font-size: 3.8rem; }
-            .nav-container { gap: 40px; }
-            .category-btn {
-                min-width: 280px;
-                padding: 28px 50px;
-                font-size: 1.9rem;
-            }
-        }
-        
-        @media (max-width: 600px) {
-            .nav-container {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-    </style>
 </head>
 <body>
-    <canvas id="background-canvas"></canvas>
 
-    <div class="header">
-        <h1 class="title">- 789 -</h1>
-        <p>4/27/2026 - Release Date, we are back.</p>
-    </div>
-    
-    <div class="nav-container">
-        <a href="tools.html" class="category-btn particle-btn">
-            <span class="content">TOOLS</span>
-        </a>
-        <a href="misc.html" class="category-btn particle-btn">
-            <span class="content">MISC</span>
-        </a>
-        <a href="games.html" class="category-btn particle-btn">
-            <span class="content">GAMES</span>
-        </a>
-        <a href="https://forms.gle/Ana1YhLE8jvwMQpx8" class="category-btn particle-btn">
-            <span class="content">REQUEST</span>
-        </a>
-        <a href="Mania.html" class="category-btn particle-btn">
-            <span class="content">[NEW] Mania</span>
-        </a>
-    </div>
-    
-    <div class="footer">
-        789 Games | Blake<br>
-        <strong>Tip:</strong> Tools: Stuff like about:blank makers. Games: self explanatory. Misc: Code tests/upcoming features
-    </div>
+	<div style="display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box">
+		<!--Just changed method to post-->
+		<input id="magnet" placeholder="Paste magnet link" style="text-align: center"></input>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<label for="torrent">or upload .torrent file</label>
+			<input style="width: auto" type="file" id="torrent" name="torrent" accept=".torrent">
+		</div>
+		<button id="submit" onclick="submit()">Submit</button>
 
-    <script>
-        // Button particles
-        function initButtonParticles(btn) {
-            if (!btn) return;
-            const canvas = document.createElement('canvas');
-            canvas.style.position = 'absolute';
-            canvas.style.top = '0';
-            canvas.style.left = '0';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            canvas.style.zIndex = '1';
-            canvas.style.pointerEvents = 'none';
-            btn.prepend(canvas);
+		<div style="height: 20px"></div>
+		<h4 style="text-align: center">Download might take up to a minute to start, please be patient</h4>
+		<div id="fileList" style="width: 100%; padding: 0 25px 0 25px; box-sizing: border-box">
+		</div>
+	</div>
 
-            const ctx = canvas.getContext('2d');
-            let particles = [];
-            let frame;
+	<dialog id="error">
+		<article>
+			<h2>Error</h2>
+				<p>Magnet link / .torrent file is invalid</p>
+			<footer>
+				<button onclick="document.querySelector('#error').open = false">OK</button>
+			</footer>
+		</article>
+	</dialog>
 
-            class Particle {
-                constructor(x, y) {
-                    this.x = x;
-                    this.y = y;
-                    this.vx = (Math.random() - 0.5) * 0.7;
-                    this.vy = -(0.9 + Math.random() * 1.1);
-                    this.life = 180 + Math.random() * 100;
-                    this.size = 2.2 + Math.random() * 3.2;
-                    this.hueShift = Math.random() * 12;
-                }
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    this.vy -= 0.04;
-                    this.vx *= 0.98;
-                    this.life -= 1.1;
-                    this.size *= 0.988;
-                }
-                draw() {
-                    const alpha = Math.max(0, this.life / 220);
-                    ctx.save();
-                    ctx.globalAlpha = alpha;
-                    ctx.shadowBlur = 18;
-                    ctx.shadowColor = '#ff3366';
-                    ctx.fillStyle = `hsl(348, 100%, ${72 + this.hueShift}%)`;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
-            }
+	<script>
 
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                if (Math.random() < 0.55) {
-                    particles.push(new Particle(Math.random() * canvas.width, canvas.height * 0.92));
-                }
+		let downloadMagnet = ""
+		function submit() {
 
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const p = particles[i];
-                    p.update();
-                    p.draw();
-                    if (p.life <= 0 || p.y < 0 || p.x < 0 || p.x > canvas.width) particles.splice(i, 1);
-                }
-                frame = requestAnimationFrame(animate);
-            }
+			document.querySelector("#fileList").innerHTML = ""
+			document.querySelector("#submit").disabled = true
+			document.querySelector("#submit").innerHTML = "Fetching files... can take up to a minute"
 
-            function resize() {
-                canvas.width = btn.offsetWidth;
-                canvas.height = btn.offsetHeight;
-            }
+			const formData = new FormData();
+			formData.append("magnet", document.querySelector("#magnet").value);
+			formData.append("torrent", document.querySelector("#torrent").files[0]);
 
-            resize();
-            animate();
-            window.addEventListener('resize', () => setTimeout(resize, 150));
-        }
+			const xhr = new XMLHttpRequest()
+			xhr.addEventListener('load', function() {
 
-        // Falling blocks (unchanged - works great)
-        const bgCanvas = document.getElementById('background-canvas');
-        const bgCtx = bgCanvas.getContext('2d', { alpha: true });
+				if (xhr.status === 200) {
 
-        let fallingPieces = [];
-        let lastTime = 0;
+					if (xhr.getResponseHeader('Content-Type').includes('application/json')) {
 
-        const TETROMINOS = [
-            { color: '#00ffff', shape: [[1,1,1,1]] },
-            { color: '#ffff00', shape: [[1,1],[1,1]] },
-            { color: '#aa00ff', shape: [[0,1,0],[1,1,1]] },
-            { color: '#00ff00', shape: [[0,1,1],[1,1,0]] },
-            { color: '#ff0000', shape: [[1,1,0],[0,1,1]] },
-            { color: '#0000ff', shape: [[1,0,0],[1,1,1]] },
-            { color: '#ff8800', shape: [[0,0,1],[1,1,1]] }
-        ];
+						let res = JSON.parse(xhr.responseText)
+						for (let i in res.fileNames) {
+							item = res.fileNames[i]
 
-        class FallingPiece {
-            constructor() {
-                const tet = TETROMINOS[Math.floor(Math.random() * TETROMINOS.length)];
-                this.color = tet.color;
-                this.shape = tet.shape;
-                this.size = 26 + Math.random() * 24;
-                this.x = Math.random() * (window.innerWidth - this.size * 4);
-                this.y = -this.size * 4;
-                this.speed = 1.6 + Math.random() * 3.2;
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.055;
-            }
+							let div = document.createElement("div")
+							div.style.display = "flex"
+							div.style.justifyContent = "space-between"
+							div.style.marginBottom = "25px"
 
-            update() {
-                this.y += this.speed;
-                this.rotation += this.rotationSpeed;
-            }
+							let h6 = document.createElement("h6")
+							h6.style.display = "inline-block"
+							h6.style.wordBreak = "break-all"
+							h6.innerHTML = item
 
-            draw() {
-                bgCtx.save();
-                bgCtx.translate(this.x + this.size * 2, this.y + this.size * 2);
-                bgCtx.rotate(this.rotation);
+							let a = document.createElement("a")
+							a.href = "/download?magnet=" + encodeURIComponent(res.magnet) + "&fileIndex=" + i;
+							a.onclick = function(event) {
+								event.preventDefault()
+								//We do this to prevent the user from spamming the <a>
+								//There is no good method to completely disable an <a> tag for file download
+								//Disabling it directly will result in cancelling the download
+								const tempLink = document.createElement("a");
+								tempLink.href = a.href;
+								tempLink.setAttribute("download", ""); 
+								tempLink.style.display = "none";
+								document.body.appendChild(tempLink);
+								tempLink.click();
+								document.body.removeChild(tempLink);
 
-                const s = this.size;
-                bgCtx.shadowBlur = 28;
-                bgCtx.shadowColor = this.color;
+								this.setAttribute("disabled", true);
+								this.setAttribute("href", "javascript:void(0)")
+								this.getElementsByTagName("button")[0].disabled = true
 
-                for (let r = 0; r < this.shape.length; r++) {
-                    for (let c = 0; c < this.shape[r].length; c++) {
-                        if (this.shape[r][c]) {
-                            const px = (c - this.shape[r].length/2) * s;
-                            const py = (r - this.shape.length/2) * s;
-                            
-                            bgCtx.fillStyle = this.color;
-                            bgCtx.fillRect(px, py, s - 4, s - 4);
+							};
 
-                            bgCtx.fillStyle = 'rgba(255,255,255,0.65)';
-                            bgCtx.fillRect(px + 6, py + 6, s - 16, 8);
-                        }
-                    }
-                }
-                bgCtx.restore();
-            }
-        }
+							let button = document.createElement("button")
+							button.style.marginLeft = "25px"
+							button.innerHTML = "Download"
 
-        function resizeBackground() {
-            bgCanvas.width = window.innerWidth;
-            bgCanvas.height = window.innerHeight;
-        }
+							document.querySelector("#fileList").appendChild(div)
+							button.style.height = "initial"
+							a.appendChild(button)
 
-        function animateBackground(timestamp) {
-            if (!lastTime) lastTime = timestamp;
-            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+							div.appendChild(h6)
+							div.appendChild(a)
 
-            if (Math.random() < 0.085) {
-                fallingPieces.push(new FallingPiece());
-            }
+							document.querySelector("#fileList").appendChild(div)
 
-            for (let i = fallingPieces.length - 1; i >= 0; i--) {
-                const piece = fallingPieces[i];
-                piece.update();
-                piece.draw();
+						}
 
-                if (piece.y > bgCanvas.height + 100) {
-                    fallingPieces.splice(i, 1);
-                }
-            }
+					} else {
+						if(xhr.responseText == "INVALID") {
+							document.querySelector("#error").open = true
+						}
+					}
+				} else {
 
-            requestAnimationFrame(animateBackground);
-        }
+					console.log('Upload failed:', xhr.responseText);
+					document.querySelector("#submit").disabled = false
+					document.querySelector("#submit").innerHTML = "Submit"
+					document.querySelector("#magnet").value = ""
+					document.querySelector("#torrent").value = ""
 
-        // Start everything
-        window.addEventListener('load', () => {
-            console.log('%c✅ Fixed title with proper text chroma effect', 'color:#ff0033; font-size:16px;');
-            
-            document.querySelectorAll('.particle-btn').forEach(btn => initButtonParticles(btn));
+				}
 
-            resizeBackground();
-            requestAnimationFrame(animateBackground);
+				document.querySelector("#submit").disabled = false
+				document.querySelector("#submit").innerHTML = "Submit"
+				document.querySelector("#magnet").value = ""
+				document.querySelector("#torrent").value = ""
 
-            window.addEventListener('resize', () => setTimeout(resizeBackground, 100));
-        });
-    </script>
+			});
+
+			xhr.open('POST', '/fileList'); 
+			xhr.send(formData);
+
+		}
+
+	</script>
 </body>
 </html>
+
